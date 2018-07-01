@@ -1,18 +1,20 @@
-const Web3Util = Object.freeze(new Web3UtilConstructor('https://kevm-testnet.iohkdev.io:8546'));
+// const Network = Object.freeze(new Web3NetworkConstructor('https://kevm-testnet.iohkdev.io:8546', 'Cardano Test-Net'));
+const Network = Object.freeze(new MockNetworkConstructor());
 
 const FAUCET_INTERVAL_MILLIS = 30000;
+const FAUCET_MAX_PENDING_REQUESTS = 10;
 
 const STATE = {
     init: function() {
         if (!this.accounts) {
-            this.accounts.push({pk: '0x' + newRandomPrivateKey()});
+            this.accounts.push({pk: '0x' + Util.newRandomPrivateKey()});
         }
         $.each(this.accounts, (i, account) => {
             if (!account.pk) {
                 console.error('Invalid account object with no PK found - ignoring.', account);
                 return;
             }
-            account.acc = Web3Util.recoverAcc(account.pk);
+            account.acc = Network.recoverAcc(account.pk);
         });
     },
     accounts: [{
@@ -28,7 +30,7 @@ const STATE = {
         queue: [],
         pushRequest: function(address) {
             let request = {
-                id: ncrypto.randomBytes(16).toString('hex'),
+                id: Util.newRandomHex(16),
                 address: address
             };
             let queue = this.queue;
@@ -57,7 +59,7 @@ const VIEW = {
     init: function() {
         this.AccSelector.el_selector = $('#account-selector');
         this.AccSelector.el_balance = $('#balance');
-        this.AccSelector.el_reload = $('#balance-reload');
+        this.AccSelector.el_reload_btn = $('#balance-reload');
         this.AddAccountModal.el_modal = $('#account-add-modal');
         this.AddAccountModal.el_pk_input = $('#account-add-pk');
         this.AddAccountModal.el_pk_input_err = $('#account-add-pk-err');
@@ -74,7 +76,7 @@ const VIEW = {
     AccSelector: {
         el_selector: null,
         el_balance: null,
-        el_reload: null,
+        el_reload_btn: null,
         selectedAddress: function (a) {
             return val(this.el_selector, a);
         },
@@ -130,7 +132,10 @@ const VIEW = {
         },
         closeModal: function() {
             this.el_modal.modal('toggle');
-        }
+        },
+        initEnabled: function (v) {
+            this.el_init_btn.attr('disabled', !v);
+        },
     },
     GetCoinsModal: {
         el_modal: null,
@@ -163,6 +168,9 @@ const VIEW = {
         removeQueueRequest: function(req) {
             if (!req) {return;}
             this.findRequestItem(req).remove();
+        },
+        submitEnabled: function (v) {
+            this.el_submit_btn.attr('disabled', !v);
         },
     },
 };
@@ -203,7 +211,7 @@ function appendAccountToWorkspace(acc) {
 }
 
 function addAccountRandomizeKey() {
-    VIEW.AddAccountModal.privateKey(Web3Util.newRandomPrivateKey());
+    VIEW.AddAccountModal.privateKey(Util.newRandomPrivateKey());
 }
 
 function accountRemoveSetAddress(address = STATE.selectedAccount) {
@@ -218,19 +226,27 @@ function updateBalance(address = STATE.selectedAccount) {
     if (VIEW.AccSelector.selectedAddress() === address) {
         VIEW.AccSelector.balance('...');
     }
-    Web3Util.getBalance(address, r => {
+    Network.getBalance(address, r => {
         if (VIEW.AccSelector.selectedAddress() === address) {
             VIEW.AccSelector.balance(r);
         }
     });
 }
 
-function faucetRequest(address, f) {
-    $.post('https://kevm-testnet.iohkdev.io:8099/faucet?address=' + address, f);
+function updateAccountRemoveButtonAvailability() {
+    let selectedAccountRequests = STATE.faucet.queue.find((r) => r.address === STATE.selectedAccount);
+    VIEW.RemoveAccountModal.initEnabled(!selectedAccountRequests);
+}
+
+function updateFaucetButtonAvailability() {
+    VIEW.GetCoinsModal.submitEnabled(
+        STATE.faucet.queue.length < FAUCET_MAX_PENDING_REQUESTS);
 }
 
 function queueFaucetRequest(address) {
     let request = STATE.faucet.pushRequest(address);
+    updateFaucetButtonAvailability();
+    updateAccountRemoveButtonAvailability();
     if (STATE.faucet.queue.length === 1) {
         function requestWorker(req) {
             let timeout = req.expectedRequestMillis - new Date().getTime();
@@ -243,9 +259,9 @@ function queueFaucetRequest(address) {
                 STATE.faucet.lastRequestMillis = req.requestMillis = currentMillis;
                 VIEW.GetCoinsModal.markRequestBeginning(req);
                 // mock request
-                faucetRequest(req.address, function (tx) {
+                Network.faucetRequest(req.address, function (tx) {
                     console.log('Received faucet tx id: ' + tx);
-                    Web3Util.web3.eth.getTransactionReceiptMined(tx).then(function (tx) {
+                    Network.getTransactionReceiptMined(tx).then(function (tx) {
                         console.log('Received faucet tx: ', tx);
                         if (VIEW.AccSelector.selectedAddress() === req.address) {
                             updateBalance(req.address);
@@ -253,8 +269,10 @@ function queueFaucetRequest(address) {
                         if (STATE.faucet.queue.length === 0 || STATE.faucet.queue[0].id !== req.id) {
                             return;
                         }
-                        VIEW.GetCoinsModal.removeQueueRequest(req);
                         STATE.faucet.queue.splice(0,1);
+                        VIEW.GetCoinsModal.removeQueueRequest(req);
+                        updateFaucetButtonAvailability();
+                        updateAccountRemoveButtonAvailability();
                         if (STATE.faucet.queue.length > 0) {
                             requestWorker(STATE.faucet.queue[0]);
                         }
@@ -286,16 +304,17 @@ $(function() {
     function onAccountSelectorChange() {
         let addr = VIEW.AccSelector.selectedAddress();
         STATE.selectedAccount = addr;
+        updateAccountRemoveButtonAvailability();
         updateBalance(addr);
     }
 
     updateBalance();
     VIEW.AccSelector.el_selector.change(onAccountSelectorChange);
-    VIEW.AccSelector.el_reload.click(() => updateBalance());
+    VIEW.AccSelector.el_reload_btn.click(() => updateBalance());
 
     VIEW.AddAccountModal.el_pk_input.on('change paste keyup', function (e) {
         let val = VIEW.AddAccountModal.privateKey();
-        if (val.length === 64 && Web3Util.web3.utils.isHex(val)) {
+        if (val.length === 64 && Network.web3.utils.isHex(val)) {
             VIEW.AddAccountModal.markInputError();
         } else {
             VIEW.AddAccountModal.markInputError('Invalid Ethereum private key');
@@ -316,7 +335,7 @@ $(function() {
         }
         let acc;
         try {
-            acc = Web3Util.recoverAcc('0x' + VIEW.AddAccountModal.privateKey());
+            acc = Network.recoverAcc('0x' + VIEW.AddAccountModal.privateKey());
         } catch (e) {
             console.error('Failed to create account from a private key!', {pk: VIEW.AddAccountModal.privateKey(), err: e});
             VIEW.AddAccountModal.markInputError('Invalid key: failed to create an account');
@@ -333,7 +352,8 @@ $(function() {
         if (confirm('Delete account ' + address + "?")) {
             console.log('Removing account: ' + address);
             $('#account-selector option[key=' + address + ']').remove();
-            STATE.accounts = $.grep(STATE.accounts, (a) => a.acc.address !== address);
+            Util.removeFirstIf(STATE.accounts, (a) => a.acc.address === address);
+            Network.removeAcc(address);
             onAccountSelectorChange();
             updateRemoveAccountAvailability();
         }
