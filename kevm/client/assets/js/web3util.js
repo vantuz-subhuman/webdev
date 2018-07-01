@@ -122,10 +122,4 @@ function MockNetworkConstructor() {
             cb('0x' + Util.newRandomHex());
         }, Util.randomInt(4000) + 1000);
     };
-
-    let parentRemoveAcc = this.removeAcc;
-    this.removeAcc = function (address) {
-        parentRemoveAcc.call(this, address);
-        delete balances[address];
-    };
 }

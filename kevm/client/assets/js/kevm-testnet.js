@@ -220,6 +220,7 @@ function appendAccountToWorkspace(acc) {
     });
     STATE.selectedAccount = acc.address;
     VIEW.AccSelector.addAndSelectAddress(acc.address);
+    updateBalance();
 }
 
 function addAccountRandomizeKey() {
