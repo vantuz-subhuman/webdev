@@ -151,9 +151,15 @@ const VIEW = {
         addQueueRequest: function (req) {
             if (!req) {return;}
             this.el_queue_list.append(
-                $(`<li class="account-coins-queue-list-item list-group-item d-flex justify-content-between align-items-center" req="${req.id}"></li>`)
-                    .append($(`<span>${req.address}</span>`))
-                    .append($(`<span class="badge badge-info badge-pill account-coins-queue-list-item-time">${new Date(req.expectedRequestMillis).toLocaleTimeString()}</span>`)));
+                $(`<li class="account-coins-queue-list-item list-group-item" req="${req.id}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>${req.address}</span>
+                            <span class="badge badge-info badge-pill account-coins-queue-list-item-time">${new Date(req.expectedRequestMillis).toLocaleTimeString()}</span>
+                        </div>
+                        <div class="modal-comment account-coins-queue-list-item-tx-div" hidden="hidden">
+                            <span><b>Tx:</b> <span class="account-coins-queue-list-item-tx"></span></span>
+                        </div>
+                   </li>`));
         },
         findRequestItem: function(req) {
             return this.el_queue_list.find(`li[req="${req.id}"]`);
@@ -164,6 +170,12 @@ const VIEW = {
             item.addClass('active');
             $('<img src="assets/Dual_Ring-3s-64px.gif" width="24px"/>')
                 .insertBefore(item.find('.account-coins-queue-list-item-time'));
+        },
+        markRequestTxCreated: function(req, tx) {
+            if (!req) {return;}
+            let item = this.findRequestItem(req);
+            item.find('.account-coins-queue-list-item-tx').text(tx);
+            item.find('.account-coins-queue-list-item-tx-div').attr('hidden', false);
         },
         removeQueueRequest: function(req) {
             if (!req) {return;}
@@ -261,6 +273,7 @@ function queueFaucetRequest(address) {
                 // mock request
                 Network.faucetRequest(req.address, function (tx) {
                     console.log('Received faucet tx id: ' + tx);
+                    VIEW.GetCoinsModal.markRequestTxCreated(req, tx);
                     Network.getTransactionReceiptMined(tx).then(function (tx) {
                         console.log('Received faucet tx: ', tx);
                         if (VIEW.AccSelector.selectedAddress() === req.address) {

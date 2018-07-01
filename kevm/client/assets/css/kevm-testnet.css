@@ -31,6 +31,6 @@ body {
 }
 
 .account-coins-queue-list-item.active {
-    background: lightblue;
+    background: aliceblue;
     color: black;
 }
