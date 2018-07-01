@@ -1,0 +1,36 @@
+body {
+    min-height: 101vh;
+    padding-top: 5rem;
+}
+
+#balance {
+    font-size: 1rem;
+    height: 2.4rem;
+    padding-top: 0.59rem;
+}
+
+.modal-dialog {
+    min-width: 68ch;
+}
+
+#account-add-pk {
+    font-family: monospace;
+    font-size: 1em;
+}
+
+.modal-comment {
+    margin-top: 1em;
+    font-size: 0.8em;
+    color: grey;
+}
+
+#account-coins-queue-card {
+    height: 15rem;
+    overflow: scroll;
+    overflow-scrolling: auto;
+}
+
+.account-coins-queue-list-item.active {
+    background: lightblue;
+    color: black;
+}
