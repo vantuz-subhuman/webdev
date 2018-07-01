@@ -33,9 +33,9 @@ function Web3UtilConstructor(network) {
     };
 
     this.getBalance = function(address, cb) {
-        cb('' + Math.round(Math.random() * 100) / 100);
-        // this.web3.eth.getBalance(address)
-        //     .then(r => cb(this.web3.utils.fromWei(r)));
+        // cb('' + Math.round(Math.random() * 100) / 100);
+        this.web3.eth.getBalance(address)
+            .then(r => cb(this.web3.utils.fromWei(r)));
     };
 
     this.recoverAcc = function(pk) {

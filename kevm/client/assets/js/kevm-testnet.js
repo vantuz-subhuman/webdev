@@ -225,6 +225,10 @@ function updateBalance(address = STATE.selectedAccount) {
     });
 }
 
+function faucetRequest(address, f) {
+    $.post('https://kevm-testnet.iohkdev.io:8099/faucet?address=' + address, f);
+}
+
 function queueFaucetRequest(address) {
     let request = STATE.faucet.pushRequest(address);
     if (STATE.faucet.queue.length === 1) {
@@ -239,17 +243,23 @@ function queueFaucetRequest(address) {
                 STATE.faucet.lastRequestMillis = req.requestMillis = currentMillis;
                 VIEW.GetCoinsModal.markRequestBeginning(req);
                 // mock request
-                setTimeout(function () {
-                    if (STATE.faucet.queue.length === 0 || STATE.faucet.queue[0].id !== req.id) {
-                        return;
-                    }
-                    console.log('Finished faucet request for: ', req);
-                    VIEW.GetCoinsModal.removeQueueRequest(req);
-                    STATE.faucet.queue.splice(0,1);
-                    if (STATE.faucet.queue.length > 0) {
-                        requestWorker(STATE.faucet.queue[0]);
-                    }
-                }, 5000);
+                faucetRequest(req.address, function (tx) {
+                    console.log('Received faucet tx id: ' + tx);
+                    Web3Util.web3.eth.getTransactionReceiptMined(tx).then(function (tx) {
+                        console.log('Received faucet tx: ', tx);
+                        if (VIEW.AccSelector.selectedAddress() === req.address) {
+                            updateBalance(req.address);
+                        }
+                        if (STATE.faucet.queue.length === 0 || STATE.faucet.queue[0].id !== req.id) {
+                            return;
+                        }
+                        VIEW.GetCoinsModal.removeQueueRequest(req);
+                        STATE.faucet.queue.splice(0,1);
+                        if (STATE.faucet.queue.length > 0) {
+                            requestWorker(STATE.faucet.queue[0]);
+                        }
+                    });
+                });
             }, timeout);
         }
         requestWorker(request);
@@ -332,15 +342,7 @@ $(function() {
 
     VIEW.GetCoinsModal.el_submit_btn.click(function (e) {
         queueFaucetRequest(VIEW.GetCoinsModal.address());
-    })
-
-    // $.post('https://kevm-testnet.iohkdev.io:8099/faucet?address=' + acc.address, function (data) {
-    //     console.log('Waiting for tx: ' + data);
-    //     web3.eth.getTransactionReceiptMined(data).then(function (tx) {
-    //         console.log('Faucet tx: ', tx);
-    //         getBalance(acc, r => console.log('Balance2: ' + r));
-    //     });
-    // });
+    });
 
     // BrowserSolc.getVersions((a,b) => {
     //     solc.versions = Object.freeze(Object.entries(b));
