@@ -72,6 +72,15 @@ const VIEW = {
         this.GetCoinsModal.el_address_input = $('#account-coins-address');
         this.GetCoinsModal.el_submit_btn = $('#account-coins-btn');
         this.GetCoinsModal.el_queue_list = $('#account-coins-queue-list');
+
+        this.Editor.init();
+    },
+    Editor: {
+        ace: null,
+        init: function() {
+            this.ace = ace.edit('editor');
+            this.ace.session.setMode("ace/mode/solidity");
+        },
     },
     AccSelector: {
         el_selector: null,
