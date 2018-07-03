@@ -86,6 +86,7 @@ const VIEW = {
         el_editor_row: null,
         el_editor_overlay: null,
         el_compile_btn: null,
+        el_compile_spinner: null,
         el_solc_selector: null,
         init: function() {
             this.ace = ace.edit('editor');
@@ -93,6 +94,7 @@ const VIEW = {
             this.el_editor_row = $('#editor-row');
             this.el_editor_overlay = $('#editor-row-overlay');
             this.el_compile_btn = $('#compile-btn');
+            this.el_compile_spinner = $('#compile-spinner');
             this.el_solc_selector = $('#solc-selector');
         },
         setEditorEnabled(v) {
@@ -102,6 +104,10 @@ const VIEW = {
                 this.el_editor_row.addClass('disabled-area');
             }
             this.el_editor_overlay.attr('hidden', v);
+        },
+        setCompiling(v) {
+            this.el_compile_btn.attr('disabled', v);
+            this.el_compile_spinner.attr('hidden', !v);
         },
         setSolcVersions(versions) {
             this.el_solc_selector.html('');
@@ -368,6 +374,29 @@ function queueFaucetRequest(address) {
     VIEW.GetCoinsModal.addQueueRequest(request);
 }
 
+function compileCurrentCode() {
+    VIEW.Editor.setEditorEnabled(false);
+    setTimeout(() => {
+        let code = VIEW.Editor.ace.getValue();
+        let res = COMPILER.compile(code);
+        console.log('Compiled result: ', res);
+        let annotations = [];
+        if (res.errors) {
+            annotations = res.errors.map((s) => {
+                let pref = s.split(' ', 1)[0];
+                let coords = pref.split(':');
+                if (coords[0] || coords[3]) {
+                    console.warn('COORDINATES! ' + s);
+                }
+                let message = s.substr(pref.length+1).replace(new RegExp('↵', 'g'),'\n').trim();
+                return {row: parseInt(coords[1]-1), column: parseInt(coords[2]-1), text: message, type: 'error'};
+            });
+        }
+        VIEW.Editor.ace.session.setAnnotations(annotations);
+        VIEW.Editor.setEditorEnabled(true);
+    }, 100);
+}
+
 $(function() {
 
     STATE.init();
@@ -458,15 +487,13 @@ $(function() {
             switch (String.fromCharCode(event.which).toLowerCase()) {
                 case 's':
                     event.preventDefault();
-                    console.log('ctrl-s');
+                    compileCurrentCode();
                     return false;
             }
         }
     });
 
-    VIEW.Editor.el_compile_btn.click(function () {
-        console.log('Compile: ' + VIEW.Editor.ace.getValue())
-    });
+    VIEW.Editor.el_compile_btn.click(compileCurrentCode);
 
     VIEW.Editor.el_solc_selector.change(function () {
         let idx = parseInt($(this).find('option:selected').attr('idx'));
