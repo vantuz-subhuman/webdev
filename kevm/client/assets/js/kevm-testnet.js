@@ -45,6 +45,9 @@ const STATE = {
             queue.push(request);
             return request;
         }
+    },
+    editor: {
+        autoCompile: false
     }
 };
 
@@ -86,6 +89,7 @@ const VIEW = {
         el_editor_row: null,
         el_editor_overlay: null,
         el_compile_btn: null,
+        el_autocompile_check: null,
         el_compile_spinner: null,
         el_solc_selector: null,
         init: function() {
@@ -94,6 +98,7 @@ const VIEW = {
             this.el_editor_row = $('#editor-row');
             this.el_editor_overlay = $('#editor-row-overlay');
             this.el_compile_btn = $('#compile-btn');
+            this.el_autocompile_check = $('#editor-autocompile');
             this.el_compile_spinner = $('#compile-spinner');
             this.el_solc_selector = $('#solc-selector');
         },
@@ -252,7 +257,7 @@ const COMPILER = {
         if (!version) {
             throw "no solc version found with idx: " + idx;
         }
-        console.log('Switchin current solc version to: ' + version)
+        console.log('Switchin current solc version to: ' + version);
         if (this.compilers[version[1]]) {
             if (cb) { cb(version); }
         } else {
@@ -482,18 +487,56 @@ $(function() {
         queueFaucetRequest(VIEW.GetCoinsModal.address());
     });
 
-    $(VIEW.Editor.ace.container).keydown(function(event) {
-        if (event.ctrlKey || event.metaKey) {
-            switch (String.fromCharCode(event.which).toLowerCase()) {
-                case 's':
-                    event.preventDefault();
-                    compileCurrentCode();
-                    return false;
-            }
+    function clearAutoCompileTimeout() {
+        if (VIEW.Editor.editTimeout) {
+            clearTimeout(VIEW.Editor.editTimeout);
+        }
+    }
+
+    function restartAutoCompileTimeout() {
+        clearAutoCompileTimeout();
+        VIEW.Editor.editTimeout = setTimeout(function () {
+            compileCurrentCode();
+        }, 3000);
+    }
+
+    VIEW.Editor.ace.session.on('change', function(delta) {
+        if (STATE.editor.autoCompile) {
+            restartAutoCompileTimeout();
         }
     });
 
-    VIEW.Editor.el_compile_btn.click(compileCurrentCode);
+    VIEW.Editor.ace.session.selection.on('changeCursor', function(delta) {
+        if (STATE.editor.autoCompile && VIEW.Editor.editTimeout) {
+            restartAutoCompileTimeout();
+        }
+    });
+
+    function onCompileCommand() {
+        if (!STATE.editor.autoCompile) {
+            compileCurrentCode();
+        }
+    }
+
+    VIEW.Editor.ace.commands.addCommand({
+        name: 'compile',
+        bindKey: {win: 'Ctrl-S',  mac: 'Command-S'},
+        exec: onCompileCommand,
+        readOnly: false // false if this command should not apply in readOnly mode
+    });
+
+    VIEW.Editor.el_compile_btn.click(onCompileCommand);
+
+    VIEW.Editor.el_autocompile_check.change(function () {
+        let val = $(this).is(':checked');
+        console.log('Auto-compile is ' + (val ? 'on' : 'off'));
+        STATE.editor.autoCompile = val;
+        if (val) {
+            restartAutoCompileTimeout();
+        } else {
+            clearAutoCompileTimeout();
+        }
+    });
 
     VIEW.Editor.el_solc_selector.change(function () {
         let idx = parseInt($(this).find('option:selected').attr('idx'));
