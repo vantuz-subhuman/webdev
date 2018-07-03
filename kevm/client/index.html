@@ -173,27 +173,46 @@
 
             </div>
 
-            <div class="col-md-12">
+            <div id="editor-row" class="row disabled-area">
 
-                <div id="editor">// Test Solidity Contract
+                <img id="editor-row-overlay" src="assets/Dual_Ring-3s-64px.gif"/>
+
+                <div class="col-md-8">
+
+                    <div id="editor">// Test Solidity Contract
 pragma solidity ^0.4.0;
 contract Counter {
-  int private count = 0;
-  function incrementCounter() public {
-    count += 1;
-  }
-  function decrementCounter() public {
-    count -= 1;
-  }
-  function getCount() public constant returns (int) {
-    return count;
-  }
-}
-</div>
+
+    int private count = 0;
+
+    function incrementCounter() public {
+        count += 1;
+    }
+
+    function decrementCounter() public {
+        count -= 1;
+    }
+
+    function getCount() public constant returns (int) {
+        return count;
+    }
+}</div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="d-flex justify-content-between">
+                        <button id="compile-btn" class="btn btn-info"><b>Compile</b> (Ctrl+S)</button>
+                        <label for="account-selector">
+                            SolC version:
+                            <select class="form-control-sm" id="solc-selector"></select>
+                        </label>
+                    </div>
+                </div>
 
             </div>
 
-            <div class="row">
+
+            <div class="row fixed-bottom">
 
                 <div class="col-md-12">
 

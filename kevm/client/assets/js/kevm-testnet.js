@@ -77,10 +77,24 @@ const VIEW = {
     },
     Editor: {
         ace: null,
+        el_editor_row: null,
+        el_editor_overlay: null,
+        el_compile_btn: null,
         init: function() {
             this.ace = ace.edit('editor');
             this.ace.session.setMode("ace/mode/solidity");
+            this.el_editor_row = $('#editor-row');
+            this.el_editor_overlay = $('#editor-row-overlay');
+            this.el_compile_btn = $('#compile-btn');
         },
+        setEditorEnabled(v) {
+            if (v) {
+                this.el_editor_row.removeClass('disabled-area');
+                this.el_editor_overlay.attr('hidden', true);
+            } else {
+                this.el_editor_row.addClass('disabled-area');
+            }
+        }
     },
     AccSelector: {
         el_selector: null,
@@ -196,31 +210,57 @@ const VIEW = {
     },
 };
 
-// const solc = {
-//     currentVersion: 0,
-//     versions: [],
-//     compilers: {},
-//     selectedVersion: function() {
-//         if (!this.versions) {
-//             throw "no solc versions available yet!";
-//         }
-//         if (this.currentVersion < 0) {
-//             throw "no solc version is selected!"
-//         }
-//         if (this.currentVersion > this.versions.length) {
-//             throw "illegal solc version is selected: " + this.currentVersion;
-//         }
-//         return this.versions[this.currentVersion];
-//     },
-//     compile: function(source, optimise=1) {
-//         version = this.selectedVersion();
-//         compiler = this.compilers[version[1]];
-//         if (!compiler) {
-//             throw "solc compiler not found for version: " + version;
-//         }
-//         return compiler.compile(source, optimise);
-//     }
-// };
+const COMPILER = {
+    currentVersion: 0,
+    versions: [],
+    compilers: {},
+    init: function(cb) {
+        let self = this;
+        BrowserSolc.getVersions((a,b) => {
+            self.versions = Object.freeze(Object.entries(b));
+            this.setSselectedVersion(0, cb);
+        });
+    },
+    setSselectedVersion: function(idx, cb) {
+        let version = this.versions[idx];
+        if (!version) {
+            throw "no solc version found with idx: " + idx;
+        }
+        console.log('Switchin current solc version to: ', version)
+        if (this.compilers[version[1]]) {
+            if (cb) { cb(version); }
+        } else {
+            console.log('Loading compiler for new version');
+            let self = this;
+            BrowserSolc.loadVersion(version[1], c => {
+                self.compilers[version[1]] = c;
+                if (cb) {
+                    cb(version);
+                }
+            });
+        }
+    },
+    getSelectedVersion: function() {
+        if (!this.versions) {
+            throw "no solc versions available yet!";
+        }
+        if (this.currentVersion < 0) {
+            throw "no solc version is selected!"
+        }
+        if (this.currentVersion > this.versions.length) {
+            throw "illegal solc version is selected: " + this.currentVersion;
+        }
+        return this.versions[this.currentVersion];
+    },
+    compile: function(source, optimise=1) {
+        let version = this.getSelectedVersion();
+        let compiler = this.compilers[version[1]];
+        if (!compiler) {
+            throw "solc compiler not found for version: " + version;
+        }
+        return compiler.compile(source, optimise);
+    }
+};
 
 function appendAccountToWorkspace(acc) {
     STATE.accounts.push({
@@ -313,6 +353,10 @@ $(function() {
     STATE.init();
     VIEW.init();
 
+    COMPILER.init(function (version) {
+        VIEW.Editor.setEditorEnabled(true);
+    });
+
     $.each(STATE.accounts, (i, account) => {
         VIEW.AccSelector.addAddress(account.acc.address)
     });
@@ -387,12 +431,7 @@ $(function() {
         queueFaucetRequest(VIEW.GetCoinsModal.address());
     });
 
-    // BrowserSolc.getVersions((a,b) => {
-    //     solc.versions = Object.freeze(Object.entries(b));
-    //     let version = solc.selectedVersion();
-    //     console.log('Solc version: ', version);
-    //     BrowserSolc.loadVersion(version[1], c => {
-    //         solc.compilers[version[1]] = c;
-    //     });
-    // });
+    VIEW.Editor.el_compile_btn.click(function () {
+        console.log('Compile: ' + VIEW.Editor.ace.getValue())
+    });
 });

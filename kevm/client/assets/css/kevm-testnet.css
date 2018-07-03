@@ -40,3 +40,18 @@ body {
     border: 2px solid lightblue;
     border-radius: 5px;
 }
+
+#editor-row-overlay {
+    display: block;
+    position: absolute;
+    z-index: 1000;
+    width: 128px;
+    height: 128px;
+    top: calc(40% - 64px);
+    left: calc(50% - 64px);
+}
+
+.disabled-area {
+    pointer-events: none;
+    opacity: 0.4;
+}
