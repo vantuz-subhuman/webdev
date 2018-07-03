@@ -389,7 +389,7 @@ function compileCurrentCode() {
                     console.warn('COORDINATES! ' + s);
                 }
                 let message = s.substr(pref.length+1).replace(new RegExp('↵', 'g'),'\n').trim();
-                return {row: parseInt(coords[1]-1), column: parseInt(coords[2]-1), text: message, type: 'error'};
+                return {row: parseInt(coords[1])-1, column: parseInt(coords[2])-1, text: message, type: 'error'};
             });
         }
         VIEW.Editor.ace.session.setAnnotations(annotations);
