@@ -23,6 +23,10 @@ function UtilConstructor() {
         }
         return [undefined, -1];
     };
+
+    this.arrayIfNot = function(v, packNull = false) {
+        return v === undefined || (v === null && !packNull) || Array.isArray(v) ? v : [v];
+    };
 }
 
 const Util = Object.freeze(new UtilConstructor());

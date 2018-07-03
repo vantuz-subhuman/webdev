@@ -80,20 +80,34 @@ const VIEW = {
         el_editor_row: null,
         el_editor_overlay: null,
         el_compile_btn: null,
+        el_solc_selector: null,
         init: function() {
             this.ace = ace.edit('editor');
             this.ace.session.setMode("ace/mode/solidity");
             this.el_editor_row = $('#editor-row');
             this.el_editor_overlay = $('#editor-row-overlay');
             this.el_compile_btn = $('#compile-btn');
+            this.el_solc_selector = $('#solc-selector');
         },
         setEditorEnabled(v) {
             if (v) {
                 this.el_editor_row.removeClass('disabled-area');
-                this.el_editor_overlay.attr('hidden', true);
             } else {
                 this.el_editor_row.addClass('disabled-area');
             }
+            this.el_editor_overlay.attr('hidden', v);
+        },
+        setSolcVersions(versions) {
+            this.el_solc_selector.html('');
+            if (!versions) { return; }
+            let self = this;
+            Util.arrayIfNot(versions).forEach((v, idx) => {
+                self.el_solc_selector.append(
+                    `<option idx="${idx}">${v}</option>`)
+            });
+        },
+        selectedSolcVersion(v) {
+            return val(this.el_solc_selector, v);
         }
     },
     AccSelector: {
@@ -226,7 +240,7 @@ const COMPILER = {
         if (!version) {
             throw "no solc version found with idx: " + idx;
         }
-        console.log('Switchin current solc version to: ', version)
+        console.log('Switchin current solc version to: ' + version)
         if (this.compilers[version[1]]) {
             if (cb) { cb(version); }
         } else {
@@ -354,6 +368,8 @@ $(function() {
     VIEW.init();
 
     COMPILER.init(function (version) {
+        VIEW.Editor.setSolcVersions(COMPILER.versions.map(v => v[0]));
+        VIEW.Editor.selectedSolcVersion(version[0]);
         VIEW.Editor.setEditorEnabled(true);
     });
 
@@ -434,4 +450,12 @@ $(function() {
     VIEW.Editor.el_compile_btn.click(function () {
         console.log('Compile: ' + VIEW.Editor.ace.getValue())
     });
+
+    VIEW.Editor.el_solc_selector.change(function () {
+        let idx = parseInt($(this).find('option:selected').attr('idx'));
+        VIEW.Editor.setEditorEnabled(false);
+        COMPILER.setSselectedVersion(idx, () => {
+            VIEW.Editor.setEditorEnabled(true);
+        });
+    })
 });
