@@ -3,6 +3,7 @@ const Network = Object.freeze(new MockNetworkConstructor());
 
 const FAUCET_INTERVAL_MILLIS = 30000;
 const FAUCET_MAX_PENDING_REQUESTS = 10;
+const CACHED_SOLC_VERSIONS = new Set(['soljson-v0.4.24+commit.e67f0147.js']);
 
 const STATE = {
     init: function() {
@@ -74,6 +75,11 @@ const VIEW = {
         this.GetCoinsModal.el_queue_list = $('#account-coins-queue-list');
 
         this.Editor.init();
+
+        $(window).resize(function () {
+            let h = $('#navbar').height();
+            $('body').css('padding-top', `${h+30}px`);
+        });
     },
     Editor: {
         ace: null,
@@ -251,7 +257,7 @@ const COMPILER = {
                 if (cb) {
                     cb(version);
                 }
-            });
+            }, CACHED_SOLC_VERSIONS.has(version[1]) ? `assets/js/solc-bin/${version[1]}` : undefined);
         }
     },
     getSelectedVersion: function() {
@@ -445,6 +451,17 @@ $(function() {
 
     VIEW.GetCoinsModal.el_submit_btn.click(function (e) {
         queueFaucetRequest(VIEW.GetCoinsModal.address());
+    });
+
+    $(VIEW.Editor.ace.container).keydown(function(event) {
+        if (event.ctrlKey || event.metaKey) {
+            switch (String.fromCharCode(event.which).toLowerCase()) {
+                case 's':
+                    event.preventDefault();
+                    console.log('ctrl-s');
+                    return false;
+            }
+        }
     });
 
     VIEW.Editor.el_compile_btn.click(function () {

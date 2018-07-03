@@ -1,3 +1,7 @@
+html,body {
+    height: 100%;
+}
+
 body {
     min-height: 101vh;
     padding-top: 5rem;
@@ -54,4 +58,9 @@ body {
 .disabled-area {
     pointer-events: none;
     opacity: 0.4;
+}
+
+#footer-row {
+    background-color: #fafafa;
+    border-top: 1px solid lightgrey;
 }

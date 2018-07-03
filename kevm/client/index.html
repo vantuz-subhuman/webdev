@@ -21,39 +21,41 @@
 
     <body>
 
-        <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top justify-content-between">
 
-            <a class="navbar-brand" href=".">Cardano KEVM Client</a>
+    <nav id="navbar" class="navbar navbar-expand-lg navbar-light bg-light fixed-top justify-content-between">
 
-            <div style="padding-top: 8px;">
-                <label for="account-selector">
-                    Account:
-                    <select class="form-control-sm" id="account-selector">
-                    </select>
-                </label>
-                <span id="balance" class="badge badge-info">... ETH</span>
-                <button type="button" class="btn btn-info" id="balance-reload">
-                    &#x21bb
-                </button>
-                <button id="account-add-init-btn" type="button" class="btn btn-info"
-                        data-toggle="modal" data-target="#account-add-modal"
-                        onclick="addAccountRandomizeKey()">
-                    +
-                </button>
-                <button id="account-remove-init-btn" type="button" class="btn btn-info"
-                        data-toggle="modal" data-target="#account-remove-modal"
-                        onclick="accountRemoveSetAddress()">
-                    -
-                </button>
-                <button id="account-coins-init-btn" type="button" class="btn btn-info"
-                        data-toggle="modal" data-target="#account-coins-modal"
-                        onclick="accountCoinsSetAddress()">
-                    $
-                </button>
-            </div>
-        </nav>
+        <a class="navbar-brand" href=".">Cardano KEVM Client</a>
 
-        <div id="main-container" class="container-fluid">
+        <div style="padding-top: 8px;">
+            <label for="account-selector">
+                Account:
+                <select class="form-control-sm" id="account-selector">
+                </select>
+            </label>
+            <span id="balance" class="badge badge-info">... ETH</span>
+            <button type="button" class="btn btn-info" id="balance-reload">
+                &#x21bb
+            </button>
+            <button id="account-add-init-btn" type="button" class="btn btn-info"
+                    data-toggle="modal" data-target="#account-add-modal"
+                    onclick="addAccountRandomizeKey()">
+                +
+            </button>
+            <button id="account-remove-init-btn" type="button" class="btn btn-info"
+                    data-toggle="modal" data-target="#account-remove-modal"
+                    onclick="accountRemoveSetAddress()">
+                -
+            </button>
+            <button id="account-coins-init-btn" type="button" class="btn btn-info"
+                    data-toggle="modal" data-target="#account-coins-modal"
+                    onclick="accountCoinsSetAddress()">
+                $
+            </button>
+        </div>
+    </nav>
+
+
+    <div id="main-container" class="container-fluid d-flex h-100 flex-column">
 
             <div class="row">
 
@@ -179,6 +181,13 @@
 
                 <div class="col-md-8">
 
+                    <div class="d-flex justify-content-between">
+                        <label for="account-selector">
+                            Compiler version:
+                            <select class="form-control-sm" id="solc-selector"></select>
+                        </label>
+                    </div>
+
                     <div id="editor">// Test Solidity Contract
 pragma solidity ^0.4.0;
 contract Counter {
@@ -197,38 +206,36 @@ contract Counter {
         return count;
     }
 }</div>
+
+                    <div class="d-flex justify-content-between">
+                        <a target="_blank" href="https://github.com/ajaxorg/ace/wiki/Default-Keyboard-Shortcuts">Keyboard shortcuts help</a>
+                        <button id="compile-btn" class="btn btn-info"><b>Compile</b> (Ctrl+S)</button>
+                    </div>
                 </div>
 
                 <div class="col-md-4">
-                    <div class="d-flex justify-content-between">
-                        <button id="compile-btn" class="btn btn-info"><b>Compile</b> (Ctrl+S)</button>
-                        <label for="account-selector">
-                            Compiler version:
-                            <select class="form-control-sm" id="solc-selector"></select>
-                        </label>
-                    </div>
                 </div>
 
             </div>
 
+            <!--<div class="row flex-fill d-flex justify-content-start"></div>-->
 
-            <div class="row fixed-bottom">
+            <!--<div class="row" id="footer-row">-->
 
-                <div class="col-md-12">
+                <!--<div class="col-md-12">-->
 
-                    <div id="footer" class="text-center">
-                        Version: 0.1 (<a href="#roadmap" class="activate-tab">roadmap</a>)
-                        | GitHub <a target="_blank" href="https://github.com/antipalos/antipalos.github.io/issues?q=is%3Aopen+is%3Aissue+project%3Aantipalos%2Fantipalos.github.io%2F1">@Antipalos</a>
-                        | Dev: <a target="_blank" href="https://twitter.com/vsubhuman">@vsubhuman</a>
-                        | Forum: <a target="_blank" href="https://forum.cardano.org/t/cardano-staking-profits-calculator/12314">forum.cardano.org</a>
-                        | Chat: <a target="_blank" href="https://t.me/CardanoGeneral">t.me/CardanoGeneral</a>
-                        | Reddit: <a target="_blank" href="https://www.reddit.com/r/cardano/comments/8m0ji3/cardano_staking_profits_calculator/">r/Cardano</a>
-                        | Donate: <a target="_blank" href="https://cardanowiki.info/wiki/Funding">CardanoWiki</a>
-                    </div>
+                    <!--<div id="footer" class="text-center">-->
+                        <!--Version: 0.1 (<a href="#roadmap" class="activate-tab">roadmap</a>)-->
+                        <!--| GitHub <a target="_blank" href="https://github.com/antipalos/antipalos.github.io/issues?q=is%3Aopen+is%3Aissue+project%3Aantipalos%2Fantipalos.github.io%2F1">@Antipalos</a>-->
+                        <!--| Dev: <a target="_blank" href="https://twitter.com/vsubhuman">@vsubhuman</a>-->
+                        <!--| Forum: <a target="_blank" href="https://forum.cardano.org/t/cardano-staking-profits-calculator/12314">forum.cardano.org</a>-->
+                        <!--| Chat: <a target="_blank" href="https://t.me/CardanoGeneral">t.me/CardanoGeneral</a>-->
+                        <!--| Reddit: <a target="_blank" href="https://www.reddit.com/r/cardano/comments/8m0ji3/cardano_staking_profits_calculator/">r/Cardano</a>-->
+                        <!--| Donate: <a target="_blank" href="https://cardanowiki.info/wiki/Funding">CardanoWiki</a>-->
+                    <!--</div>-->
 
-                </div>
-
-            </div>
+                <!--</div>-->
+            <!--</div>-->
 
         </div>
 
