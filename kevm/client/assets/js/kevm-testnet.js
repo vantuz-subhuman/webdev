@@ -378,6 +378,35 @@ function queueFaucetRequest(address) {
     VIEW.GetCoinsModal.addQueueRequest(request);
 }
 
+function f(res) {
+    let any = Object.values(res.contracts)[0];
+    let c = new Network.web3.eth.Contract(JSON.parse(any.interface));
+    console.log('c >', c);
+    let d = c.deploy({data: '0x' + any.bytecode});
+    console.log('d >', d);
+    try {
+        d.send({from: STATE.selectedAccount, gas: 5000000, gasPrice: 5000000000}, function (error, txHash) {
+            if (error) {
+                console.log('error > ', error);
+            } else {
+                console.log('tx > ', txHash);
+                Network.getTransactionReceiptMined(txHash)
+                    .then(function (tx) {
+                        console.log('Contract tx > ', tx)
+                    }, function (err) {
+                        console.log('Failed to wait for contract tx!', err)
+                    });
+            }
+        }).then(function (res) {
+            console.log('1 > ', res);
+        }, function (err) {
+            console.log('2 > ', err);
+        });
+    } catch (e) {
+        console.warn('Failed to send contract!', e);
+    }
+}
+
 function compileCurrentCode() {
     VIEW.Editor.setEditorEnabled(false);
     setTimeout(() => {
