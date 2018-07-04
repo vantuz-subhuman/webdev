@@ -110,9 +110,8 @@ const VIEW = {
             }
             this.el_editor_overlay.attr('hidden', v);
         },
-        setCompiling(v) {
-            this.el_compile_btn.attr('disabled', v);
-            this.el_compile_spinner.attr('hidden', !v);
+        setCompileButtonAvailable(v) {
+            this.el_compile_btn.attr('hidden', !v);
         },
         setSolcVersions(versions) {
             this.el_solc_selector.html('');
@@ -532,9 +531,11 @@ $(function() {
         console.log('Auto-compile is ' + (val ? 'on' : 'off'));
         STATE.editor.autoCompile = val;
         if (val) {
+            VIEW.Editor.setCompileButtonAvailable(false);
             restartAutoCompileTimeout();
         } else {
             clearAutoCompileTimeout();
+            VIEW.Editor.setCompileButtonAvailable(true);
         }
     });
 
