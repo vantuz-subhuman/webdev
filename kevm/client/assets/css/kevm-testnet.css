@@ -7,6 +7,10 @@ body {
     padding-top: 5rem;
 }
 
+#navbar {
+    border-bottom: 1px solid lightgrey;
+}
+
 #balance {
     font-size: 1rem;
     height: 2.4rem;
@@ -39,8 +43,20 @@ body {
     color: black;
 }
 
+.header-row {
+    height: 2.5rem;
+}
+
 #editor {
     height: 500px;
+    border: 2px solid lightblue;
+    border-radius: 5px;
+}
+
+#compiled-structure {
+    height: 500px;
+    overflow: scroll;
+    overflow-scrolling: auto;
     border: 2px solid lightblue;
     border-radius: 5px;
 }

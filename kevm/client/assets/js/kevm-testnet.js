@@ -92,6 +92,7 @@ const VIEW = {
         el_autocompile_check: null,
         el_compile_spinner: null,
         el_solc_selector: null,
+        el_structure: null,
         init: function() {
             this.ace = ace.edit('editor');
             this.ace.session.setMode("ace/mode/solidity");
@@ -101,6 +102,7 @@ const VIEW = {
             this.el_autocompile_check = $('#editor-autocompile');
             this.el_compile_spinner = $('#compile-spinner');
             this.el_solc_selector = $('#solc-selector');
+            this.el_structure = $('#compiled-structure');
         },
         setEditorEnabled(v) {
             if (v) {
@@ -124,6 +126,33 @@ const VIEW = {
         },
         selectedSolcVersion(v) {
             return val(this.el_solc_selector, v);
+        },
+        setStructureCards(structure) {
+            let el = this.el_structure;
+            el.html('');
+            structure.forEach(function (e, i) {
+                let headingId = 'structureCardHeading' + i;
+                let collapseId = 'structureCardCollapse' + i;
+                let contractName = e[0];
+                let el_card_body = $(
+                    `<div id="${collapseId}" class="collapse show list-group" aria-labelledby="${headingId}" data-parent="#accordion">
+                    </div>`);
+                e[1].forEach(function (methodName) {
+                    el_card_body.append(`<span class="list-group-item">${methodName}</span>`);
+                });
+                let el_card = $(
+                    `<div class="card">
+                        <div class="card-header" id="${headingId}">
+                            <h5 class="mb-0">
+                                <button class="btn btn-link" data-toggle="collapse" data-target="#${collapseId}" aria-expanded="true" aria-controls="${collapseId}">
+                                    ${contractName}
+                                </button>
+                            </h5>
+                        </div>
+                    </div>`)
+                    .append(el_card_body);
+                el.append(el_card);
+            })
         }
     },
     AccSelector: {
@@ -424,6 +453,17 @@ function compileCurrentCode() {
                 let message = s.substr(pref.length+1).replace(new RegExp('↵', 'g'),'\n').trim();
                 return {row: parseInt(coords[1])-1, column: parseInt(coords[2])-1, text: message, type: 'error'};
             });
+        } else {
+            let structure = Object.entries(res.contracts).map(function (e) {
+                let estimates = e[1].gasEstimates;
+                let contractName = `${e[0]} (GAS: ${estimates.creation})`;
+                let methodNames = Object.entries(estimates.external).map(function (e) {
+                    return `${e[0]} (GAS: ${e[1]})`
+                });
+                return [contractName, methodNames];
+            });
+            console.log('Structure: ', structure);
+            VIEW.Editor.setStructureCards(structure);
         }
         VIEW.Editor.ace.session.setAnnotations(annotations);
         VIEW.Editor.setEditorEnabled(true);
@@ -438,7 +478,7 @@ $(function() {
     COMPILER.init(function (version) {
         VIEW.Editor.setSolcVersions(COMPILER.versions.map(v => v[0]));
         VIEW.Editor.selectedSolcVersion(version[0]);
-        VIEW.Editor.setEditorEnabled(true);
+        compileCurrentCode();
     });
 
     $.each(STATE.accounts, (i, account) => {

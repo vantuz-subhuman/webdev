@@ -179,9 +179,9 @@
 
                 <img id="editor-row-overlay" src="assets/Dual_Ring-3s-64px.gif"/>
 
-                <div class="col-md-8">
+                <div class="col-md-7 border-right">
 
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between header-row">
                         <label for="account-selector">
                             Compiler version:
                             <select class="form-control-sm" id="solc-selector"></select>
@@ -209,6 +209,10 @@ contract Counter {
     function getCount() public constant returns (int) {
         return count;
     }
+
+    function setCounter(int c) public {
+        count = c;
+    }
 }</div>
 
                     <div class="d-flex justify-content-between">
@@ -221,7 +225,14 @@ contract Counter {
                     </div>
                 </div>
 
-                <div class="col-md-4">
+                <div class="col-md-5">
+                    <div class="d-flex justify-content-between header-row">
+                        <label for="compiled-structure">
+                            Structure:
+                        </label>
+                    </div>
+                    <div id="compiled-structure">
+                    </div>
                 </div>
 
             </div>
