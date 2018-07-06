@@ -93,6 +93,7 @@ const VIEW = {
         el_compile_spinner: null,
         el_solc_selector: null,
         el_structure: null,
+        el_structure_autoexpand: null,
         init: function() {
             this.ace = ace.edit('editor');
             this.ace.session.setMode("ace/mode/solidity");
@@ -103,6 +104,7 @@ const VIEW = {
             this.el_compile_spinner = $('#compile-spinner');
             this.el_solc_selector = $('#solc-selector');
             this.el_structure = $('#compiled-structure');
+            this.el_structure_autoexpand = $('#compiled-structure-autoexpand');
         },
         setEditorEnabled(v) {
             if (v) {
@@ -130,29 +132,54 @@ const VIEW = {
         setStructureCards(structure) {
             let el = this.el_structure;
             el.html('');
-            structure.forEach(function (e, i) {
+            el.append(`<div class="card">
+                        <div class="card-header d-flex justify-content-between" id="structureCardHeadingMain">
+                            <div class="d-inline">
+                                <div class="modal-comment" style="padding: 0; margin: 0;">
+                                    <b>Time:</b> ${structure.compiledAt}
+                                </div>
+                                <div class="modal-comment" style="padding: 0; margin: 0;">
+                                    <b>Compiler:</b> ${structure.compiler}
+                                </div>
+                                <div class="modal-comment" style="padding: 0; margin: 0;">
+                                    <b>Struct:</b> ${structure.hash}
+                                </div>
+                            </div>
+                        </div>
+                    </div>`);
+            let collapsible = structure.contracts.length > 1;
+            let expanded = !collapsible || this.el_structure_autoexpand.is(':checked');
+            structure.contracts.forEach(function (contract, i) {
                 let headingId = 'structureCardHeading' + i;
                 let collapseId = 'structureCardCollapse' + i;
-                let contractName = e[0];
                 let el_card_body = $(
-                    `<div id="${collapseId}" class="collapse show list-group" aria-labelledby="${headingId}" data-parent="#accordion">
+                    `<div id="${collapseId}" class="collapse ${expanded ? 'show' : ''} list-group" aria-labelledby="${headingId}" data-parent="#accordion">
                     </div>`);
-                e[1].forEach(function (methodName) {
-                    el_card_body.append(`<span class="list-group-item">${methodName}</span>`);
+                contract.methods.forEach(function (method) {
+                    el_card_body.append(`<span class="list-group-item structure-item">${method.name} (GAS: ${method.gas})</span>`);
                 });
                 let el_card = $(
                     `<div class="card">
-                        <div class="card-header" id="${headingId}">
-                            <h5 class="mb-0">
-                                <button class="btn btn-link" data-toggle="collapse" data-target="#${collapseId}" aria-expanded="true" aria-controls="${collapseId}">
-                                    ${contractName}
-                                </button>
-                            </h5>
+                        <div class="card-header d-flex justify-content-between" id="${headingId}">
+                            <div class="d-inline">
+                                <div>
+                                    <button class="btn btn-link structure-header" data-toggle="collapse" ${collapsible ? `data-target="#${collapseId}"` : ''} aria-expanded="true" aria-controls="${collapseId}">
+                                        ${contract.name}
+                                    </button>
+                                    <span class="structure-header">(GAS: ${contract.gas})</span>
+                                </div>
+                                <div class="modal-comment" style="padding: 0; margin: 0;">
+                                    <b>Struct:</b> ${contract.hash}
+                                </div>
+                            </div>
+                            <button class="btn-sm btn-info">
+                                Deploy
+                            </button>
                         </div>
                     </div>`)
                     .append(el_card_body);
                 el.append(el_card);
-            })
+            });
         }
     },
     AccSelector: {
@@ -271,33 +298,27 @@ const VIEW = {
 
 const COMPILER = {
     currentVersion: 0,
+    compiler: null,
     versions: [],
-    compilers: {},
     init: function(cb) {
         let self = this;
         BrowserSolc.getVersions((a,b) => {
             self.versions = Object.freeze(Object.entries(b));
-            this.setSselectedVersion(0, cb);
+            this.setSelectedVersion(0, cb);
         });
     },
-    setSselectedVersion: function(idx, cb) {
+    setSelectedVersion: function(idx, cb) {
         let version = this.versions[idx];
         if (!version) {
             throw "no solc version found with idx: " + idx;
         }
-        console.log('Switchin current solc version to: ' + version);
-        if (this.compilers[version[1]]) {
+        console.log('Switchin current solc version to: ' + version + ' (idx ' + idx + ')');
+        let self = this;
+        BrowserSolc.loadVersion(version[1], c => {
+            self.compiler = c;
+            this.currentVersion = idx;
             if (cb) { cb(version); }
-        } else {
-            console.log('Loading compiler for new version');
-            let self = this;
-            BrowserSolc.loadVersion(version[1], c => {
-                self.compilers[version[1]] = c;
-                if (cb) {
-                    cb(version);
-                }
-            }, CACHED_SOLC_VERSIONS.has(version[1]) ? `assets/js/solc-bin/${version[1]}` : undefined);
-        }
+        }, CACHED_SOLC_VERSIONS.has(version[1]) ? `assets/js/solc-bin/${version[1]}` : undefined);
     },
     getSelectedVersion: function() {
         if (!this.versions) {
@@ -312,8 +333,7 @@ const COMPILER = {
         return this.versions[this.currentVersion];
     },
     compile: function(source, optimise=1) {
-        let version = this.getSelectedVersion();
-        let compiler = this.compilers[version[1]];
+        let compiler = this.compiler;
         if (!compiler) {
             throw "solc compiler not found for version: " + version;
         }
@@ -348,6 +368,7 @@ function updateBalance(address = STATE.selectedAccount) {
         VIEW.AccSelector.balance('...');
     }
     Network.getBalance(address, r => {
+        console.log('Received balance: ' + r);
         if (VIEW.AccSelector.selectedAddress() === address) {
             VIEW.AccSelector.balance(r);
         }
@@ -440,6 +461,7 @@ function compileCurrentCode() {
     VIEW.Editor.setEditorEnabled(false);
     setTimeout(() => {
         let code = VIEW.Editor.ace.getValue();
+        let ver = COMPILER.getSelectedVersion()[1];
         let res = COMPILER.compile(code);
         console.log('Compiled result: ', res);
         let annotations = [];
@@ -454,16 +476,21 @@ function compileCurrentCode() {
                 return {row: parseInt(coords[1])-1, column: parseInt(coords[2])-1, text: message, type: 'error'};
             });
         } else {
-            let structure = Object.entries(res.contracts).map(function (e) {
+            let contracts = Object.entries(res.contracts).map(function (e) {
                 let estimates = e[1].gasEstimates;
-                let contractName = `${e[0]} (GAS: ${estimates.creation})`;
-                let methodNames = Object.entries(estimates.external).map(function (e) {
-                    return `${e[0]} (GAS: ${e[1]})`
+                let hash = Util.sha1(e[1].bytecode.dropTail(68)).substr(-16);
+                let methods = Object.entries(estimates.external).map(function (e) {
+                    return {name: e[0], gas: e[1]}
                 });
-                return [contractName, methodNames];
+                return {name: e[0], gas: estimates.creation, hash: hash, methods: methods};
             });
-            console.log('Structure: ', structure);
-            VIEW.Editor.setStructureCards(structure);
+            let totalHash = Util.sha1('' + contracts.map(c => c.hash)).substr(-32);
+            VIEW.Editor.setStructureCards({
+                compiledAt: new Date().toISOString(),
+                compiler: ver,
+                hash: totalHash,
+                contracts: contracts
+            });
         }
         VIEW.Editor.ace.session.setAnnotations(annotations);
         VIEW.Editor.setEditorEnabled(true);
@@ -611,7 +638,7 @@ $(function() {
     VIEW.Editor.el_solc_selector.change(function () {
         let idx = parseInt($(this).find('option:selected').attr('idx'));
         VIEW.Editor.setEditorEnabled(false);
-        COMPILER.setSselectedVersion(idx, () => {
+        COMPILER.setSelectedVersion(idx, () => {
             VIEW.Editor.setEditorEnabled(true);
         });
     })

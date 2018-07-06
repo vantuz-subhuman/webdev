@@ -1,4 +1,5 @@
 function UtilConstructor() {
+
     this.randomInt = function(max) {
         return Math.floor(Math.random() * Math.floor(max));
     };
@@ -27,6 +28,14 @@ function UtilConstructor() {
     this.arrayIfNot = function(v, packNull = false) {
         return v === undefined || (v === null && !packNull) || Array.isArray(v) ? v : [v];
     };
+
+    this.sha1 = function (data) {
+        return ncrypto.Hash('sha1').update(data).digest('hex');
+    };
+
+    String.prototype.dropTail = function(len) {
+        return this.substr(0,this.length-len)
+    }
 }
 
 const Util = Object.freeze(new UtilConstructor());

@@ -59,6 +59,19 @@ body {
     overflow-scrolling: auto;
     border: 2px solid lightblue;
     border-radius: 5px;
+    font-family: sans-serif;
+}
+
+#compiled-structure .card-header .btn {
+    padding: 0;
+}
+
+#compiled-structure .structure-header {
+    font-size: 0.9rem;
+}
+
+#compiled-structure .structure-item {
+    font-size: 0.75rem;
 }
 
 #editor-row-overlay {
