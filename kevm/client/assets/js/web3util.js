@@ -101,6 +101,20 @@ function Web3NetworkConstructor(network, name) {
     this.faucetRequest = function(address, cb) {
         $.post('https://kevm-testnet.iohkdev.io:8099/faucet?address=' + address, cb);
     };
+
+    this.prepareDeploy = function(contractResult, cb) {
+        let contract = new this.web3.eth.Contract(JSON.parse(contractResult.interface));
+        console.log('Contract > ', contract);
+        let deploy = contract.deploy({data: '0x' + contractResult.bytecode});
+        deploy.estimateGas().then(function (gas) {
+            cb({
+                gasEstimate: gas,
+                send: function (params, cb) {
+                    console.log(params);
+                }
+            });
+        }, (err) => cb(null, err));
+    };
 }
 
 function MockNetworkConstructor() {
@@ -134,5 +148,14 @@ function MockNetworkConstructor() {
             balances[address] = (balances[address] || 0) + 0.01;
             cb('0x' + Util.newRandomHex());
         }, Util.randomInt(4000) + 1000);
+    };
+
+    this.prepareDeploy = function(contractResult, cb) {
+        cb({
+            gasEstimate: contractResult.bytecode.length * 200,
+            send: function (params, cb) {
+                console.log(params);
+            }
+        });
     };
 }
