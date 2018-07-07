@@ -172,7 +172,7 @@ const VIEW = {
                                     <b>Struct:</b> ${contract.hash}
                                 </div>
                             </div>
-                            <button class="btn-sm btn-info">
+                            <button class="btn-sm btn-info" onclick="deployContract('${contract.name}')">
                                 Deploy
                             </button>
                         </div>
@@ -297,6 +297,7 @@ const VIEW = {
 };
 
 const COMPILER = {
+    latestResult: null,
     currentVersion: 0,
     compiler: null,
     versions: [],
@@ -428,33 +429,41 @@ function queueFaucetRequest(address) {
     VIEW.GetCoinsModal.addQueueRequest(request);
 }
 
-function f(res) {
-    let any = Object.values(res.contracts)[0];
-    let c = new Network.web3.eth.Contract(JSON.parse(any.interface));
-    console.log('c >', c);
-    let d = c.deploy({data: '0x' + any.bytecode});
-    console.log('d >', d);
-    try {
-        d.send({from: STATE.selectedAccount, gas: 5000000, gasPrice: 5000000000}, function (error, txHash) {
-            if (error) {
-                console.log('error > ', error);
-            } else {
-                console.log('tx > ', txHash);
-                Network.getTransactionReceiptMined(txHash)
-                    .then(function (tx) {
-                        console.log('Contract tx > ', tx)
-                    }, function (err) {
-                        console.log('Failed to wait for contract tx!', err)
-                    });
-            }
-        }).then(function (res) {
-            console.log('1 > ', res);
-        }, function (err) {
-            console.log('2 > ', err);
-        });
-    } catch (e) {
-        console.warn('Failed to send contract!', e);
+function deployContract(name) {
+    if (!COMPILER.latestResult) {
+        console.log('No latest compilation result is available!')
+        return;
     }
+    let contractResult = COMPILER.latestResult.contracts[name];
+    if (!contractResult) {
+        console.log('No contract found with the name: ' + name, COMPILER.latestResult);
+        return;
+    }
+    let contract = new Network.web3.eth.Contract(JSON.parse(contractResult.interface));
+    console.log('Contract >', contract);
+    let deploy = contract.deploy({data: '0x' + contractResult.bytecode});
+    console.log('Deploy >', deploy, deploy.estimateGas());
+    // try {
+    //     deploy.send({from: STATE.selectedAccount, gas: 5000000, gasPrice: 5000000000}, function (error, txHash) {
+    //         if (error) {
+    //             console.log('error > ', error);
+    //         } else {
+    //             console.log('tx > ', txHash);
+    //             Network.getTransactionReceiptMined(txHash)
+    //                 .then(function (tx) {
+    //                     console.log('Contract tx > ', tx)
+    //                 }, function (err) {
+    //                     console.log('Failed to wait for contract tx!', err)
+    //                 });
+    //         }
+    //     }).then(function (res) {
+    //         console.log('1 > ', res);
+    //     }, function (err) {
+    //         console.log('2 > ', err);
+    //     });
+    // } catch (e) {
+    //     console.warn('Failed to send contract!', e);
+    // }
 }
 
 function compileCurrentCode() {
@@ -476,6 +485,7 @@ function compileCurrentCode() {
                 return {row: parseInt(coords[1])-1, column: parseInt(coords[2])-1, text: message, type: 'error'};
             });
         } else {
+            COMPILER.latestResult = res;
             let contracts = Object.entries(res.contracts).map(function (e) {
                 let estimates = e[1].gasEstimates;
                 let hash = Util.sha1(e[1].bytecode.dropTail(68)).substr(-16);
