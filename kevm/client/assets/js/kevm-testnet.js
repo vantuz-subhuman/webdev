@@ -1,5 +1,5 @@
-// const Network = Object.freeze(new Web3NetworkConstructor('https://kevm-testnet.iohkdev.io:8546', 'Cardano Test-Net'));
-const Network = Object.freeze(new MockNetworkConstructor());
+const Network = Object.freeze(new Web3NetworkConstructor('https://kevm-testnet.iohkdev.io:8546', 'Cardano Test-Net'));
+// const Network = Object.freeze(new MockNetworkConstructor());
 
 const FAUCET_MAX_PENDING_REQUESTS = 10;
 
@@ -108,32 +108,16 @@ function deployContract(name) {
             return;
         }
         VIEW.DeployContractModal.showModal(address, name, prep.gasEstimate, function ({gasLimit, gasPrice}) {
-            prep.send({from: STATE.selectedAccount, gas: gasLimit, gasPrice: gasPrice}, function () {
-                console.log('send result > ')
+            prep.send({from: address, gas: gasLimit, gasPrice: gasPrice}, function (error, res) {
+                if (error) {
+                    console.error(error.reason, error.cause);
+                } else {
+                    console.log('Deploy result > ', res);
+                }
+                VIEW.Editor.setEditorEnabled(true);
             });
         });
     });
-    // try {
-    //     deploy.send({from: STATE.selectedAccount, gas: 5000000, gasPrice: 5000000000}, function (error, txHash) {
-    //         if (error) {
-    //             console.log('error > ', error);
-    //         } else {
-    //             console.log('tx > ', txHash);
-    //             Network.getTransactionReceiptMined(txHash)
-    //                 .then(function (tx) {
-    //                     console.log('Contract tx > ', tx)
-    //                 }, function (err) {
-    //                     console.log('Failed to wait for contract tx!', err)
-    //                 });
-    //         }
-    //     }).then(function (res) {
-    //         console.log('1 > ', res);
-    //     }, function (err) {
-    //         console.log('2 > ', err);
-    //     });
-    // } catch (e) {
-    //     console.warn('Failed to send contract!', e);
-    // }
 }
 
 function compileCurrentCode() {

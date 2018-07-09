@@ -67,6 +67,11 @@ function Web3NetworkConstructor(network, name) {
 
     AbstractNetworkConstructor.call(this, network, name);
 
+    this.fullContractAwait = 5000;
+
+    this.web3.eth.getBlockNumber()
+        .then(console.log);
+
     this.getTransactionReceiptMined = function getTransactionReceiptMined(txHash, interval) {
         const self = this.web3.eth;
         const transactionReceiptAsync = function(resolve, reject) {
@@ -111,7 +116,54 @@ function Web3NetworkConstructor(network, name) {
             cb({
                 gasEstimate: gas,
                 send: function (params, cb) {
-                    console.log(params);
+                    let result = {tx: null, contract: null};
+                    let status = {done: false};
+                    function buildCallback(fullTx, fullContract) {
+                        if (status.done) {
+                            return;
+                        }
+                        if (fullTx) {
+                            result.tx = fullTx;
+                            if (!result.contract) {
+                                setTimeout(function () {
+                                    if (!status.done) {
+                                        console.warn('Failed to wait for promised full-contract. Falling back to tx-address');
+                                        contract._address = fullTx.contractAddress;
+                                        buildCallback(null, contract);
+                                    }
+                                }, self.fullContractAwait);
+                                return;
+                            }
+                        } else if (fullContract) {
+                            result.contract = fullContract;
+                            if (!result.tx) { return; }
+                        } else {
+                            return;
+                        }
+                        status.done = true;
+                        cb(null, result);
+                    }
+                    try {
+                        deploy.send(params, function (error, txHash) {
+                            if (error) {
+                                cb({reason: 'Contract deploy returned an error', cause: error});
+                            } else {
+                                console.log('Contract deploy tx: ', txHash);
+                                self.getTransactionReceiptMined(txHash)
+                                    .then(function (tx) {
+                                        buildCallback(tx);
+                                    }, function (err) {
+                                        cb({reason: 'Failed to wait for contract tx', cause: err});
+                                    });
+                            }
+                        }).then(function (deployedContract) {
+                            buildCallback(null, deployedContract);
+                        }, function (err) {
+                            // ignore this error for now
+                        });
+                    } catch (e) {
+                        cb({reason: 'Failed to deploy contract', cause: e});
+                    }
                 }
             });
         }, (err) => cb(null, err));
@@ -156,6 +208,7 @@ function MockNetworkConstructor() {
             gasEstimate: contractResult.bytecode.length * 200,
             send: function (params, cb) {
                 console.log(params);
+                // TODO
             }
         });
     };

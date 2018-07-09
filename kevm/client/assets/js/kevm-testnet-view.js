@@ -263,8 +263,14 @@ const VIEW = {
             this.el_gas_price.val(5000000000);
             let self = this;
             this.el_submit_btn.click(function () {
+                const gasLimit = self.el_gas_limit.val();
+                const gasPrice = self.el_gas_price.val();
+                if (gasLimit === '' || gasLimit < 0 || gasPrice === '' || gasPrice < 0) {
+                    alert("Gas limit and gas price cannot be empty or negative!");
+                    return;
+                }
                 self.el_modal.modal('toggle');
-                cb({gasLimit: self.el_gas_limit.val(), gasPrice: self.el_gas_price.val()});
+                cb({gasLimit: gasLimit, gasPrice: gasPrice});
             });
             this.el_modal.modal('toggle');
         }
