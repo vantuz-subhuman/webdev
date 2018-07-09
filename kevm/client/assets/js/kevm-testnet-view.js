@@ -24,6 +24,7 @@ const VIEW = {
         this.GetCoinsModal.el_submit_btn = $('#account-coins-btn');
         this.GetCoinsModal.el_queue_list = $('#account-coins-queue-list');
 
+        this.DeployContractModal.init();
         this.Editor.init();
 
         $(window).resize(function () {
@@ -241,4 +242,31 @@ const VIEW = {
             this.el_submit_btn.attr('disabled', !v);
         },
     },
+    DeployContractModal: {
+        el_modal: null,
+        el_address_from: null,
+        el_submit_btn: null,
+        init: function () {
+            this.el_modal = $('#deploy-contract-modal');
+            this.el_address_from = $('#contract-deploy-from');
+            this.el_contract_name = $('#contract-deploy-name');
+            this.el_gas_cost = $('#contract-deploy-gas-estimate');
+            this.el_gas_limit = $('#contract-deploy-gas-limit');
+            this.el_gas_price = $('#contract-deploy-gas-price');
+            this.el_submit_btn = $('#deploy-contract-btn');
+        },
+        showModal: function(fromAddress, name, gas, cb) {
+            this.el_address_from.text(fromAddress);
+            this.el_contract_name.text(name);
+            this.el_gas_cost.text(gas + ' WEI');
+            this.el_gas_limit.val(gas * 2);
+            this.el_gas_price.val(5000000000);
+            let self = this;
+            this.el_submit_btn.click(function () {
+                self.el_modal.modal('toggle');
+                cb({gasLimit: self.el_gas_limit.val(), gasPrice: self.el_gas_price.val()});
+            });
+            this.el_modal.modal('toggle');
+        }
+    }
 };

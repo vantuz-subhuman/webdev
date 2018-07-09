@@ -1,5 +1,5 @@
-const Network = Object.freeze(new Web3NetworkConstructor('https://kevm-testnet.iohkdev.io:8546', 'Cardano Test-Net'));
-// const Network = Object.freeze(new MockNetworkConstructor());
+// const Network = Object.freeze(new Web3NetworkConstructor('https://kevm-testnet.iohkdev.io:8546', 'Cardano Test-Net'));
+const Network = Object.freeze(new MockNetworkConstructor());
 
 const FAUCET_MAX_PENDING_REQUESTS = 10;
 
@@ -92,7 +92,7 @@ function queueFaucetRequest(address) {
 
 function deployContract(name) {
     if (!COMPILER.latestResult) {
-        console.log('No latest compilation result is available!')
+        console.log('No latest compilation result is available!');
         return;
     }
     let contractResult = COMPILER.latestResult.contracts[name];
@@ -101,13 +101,17 @@ function deployContract(name) {
         return;
     }
     VIEW.Editor.setEditorEnabled(false);
-    Network.prepareDeploy(contractResult, function (prep, err) {
+    let address = STATE.selectedAccount;
+    Network.prepareDeploy(address, contractResult, function (prep, err) {
         if (err) {
             console.error('Failed to prepare contract deploy!', err);
             return;
         }
-        console.log('Gas estimate >', prep.gasEstimate);
-        VIEW.Editor.setEditorEnabled(true);
+        VIEW.DeployContractModal.showModal(address, name, prep.gasEstimate, function ({gasLimit, gasPrice}) {
+            prep.send({from: STATE.selectedAccount, gas: gasLimit, gasPrice: gasPrice}, function () {
+                console.log('send result > ')
+            });
+        });
     });
     // try {
     //     deploy.send({from: STATE.selectedAccount, gas: 5000000, gasPrice: 5000000000}, function (error, txHash) {

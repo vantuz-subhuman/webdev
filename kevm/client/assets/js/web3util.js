@@ -102,11 +102,12 @@ function Web3NetworkConstructor(network, name) {
         $.post('https://kevm-testnet.iohkdev.io:8099/faucet?address=' + address, cb);
     };
 
-    this.prepareDeploy = function(contractResult, cb) {
+    this.prepareDeploy = function(address, contractResult, cb) {
         let contract = new this.web3.eth.Contract(JSON.parse(contractResult.interface));
         console.log('Contract > ', contract);
         let deploy = contract.deploy({data: '0x' + contractResult.bytecode});
-        deploy.estimateGas().then(function (gas) {
+        let self = this;
+        deploy.estimateGas({from: address, value: 0}).then(function (gas) {
             cb({
                 gasEstimate: gas,
                 send: function (params, cb) {
@@ -150,7 +151,7 @@ function MockNetworkConstructor() {
         }, Util.randomInt(4000) + 1000);
     };
 
-    this.prepareDeploy = function(contractResult, cb) {
+    this.prepareDeploy = function(address, contractResult, cb) {
         cb({
             gasEstimate: contractResult.bytecode.length * 200,
             send: function (params, cb) {

@@ -110,7 +110,7 @@
                             <div class="modal-body row">
                                 <div class="col-12">
                                     <div class="form-group">
-                                        <label for="account-remove-address">Remove this account? (Cannot be undone!)</label></label>
+                                        <label for="account-remove-address">Remove this account? (Cannot be undone!)</label>
                                         <div class="input-group">
                                             <input id="account-remove-address" readonly="readonly" class="form-control form-control-sm" type="text">
                                         </div>
@@ -168,6 +168,50 @@
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" id="account-coins-cancel-btn">Cancel all requests</button>
                                 <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="deploy-contract-modal" tabindex="-1" role="dialog" aria-labelledby="deployContractModal" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="deployContractModal">Deploy this contract?</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body row">
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <ul class="list-group list-group-flush">
+                                            <li class="list-group-item">Contract name: <span class="codeline" id="contract-deploy-name"></span></li>
+                                            <li class="list-group-item">From address: <span class="codeline" id="contract-deploy-from"></span></li>
+                                            <li class="list-group-item">Estimated gas: <span class="codeline" id="contract-deploy-gas-estimate"></span></li>
+                                            <li class="list-group-item">
+                                                <label>
+                                                    Gas limit:
+                                                    <input type="number" min="0" id="contract-deploy-gas-limit">
+                                                </label>
+                                            </li>
+                                            <li class="list-group-item">
+                                                <label>
+                                                    Gas price:
+                                                    <input type="number" min="0" id="contract-deploy-gas-price">
+                                                </label>
+                                            </li>
+                                        </ul>
+                                        <div class="modal-comment">
+                                            <b>Note:</b> you cannot undo the account removal!
+                                            Though, you can always restore it from a private key, if you have one.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" id="deploy-contract-btn">Deploy contract</button>
                             </div>
                         </div>
                     </div>
