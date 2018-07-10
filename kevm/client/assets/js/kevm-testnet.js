@@ -114,6 +114,9 @@ function deployContract(name) {
                 } else {
                     console.log('Deploy result > ', res);
                 }
+                setTimeout(function () {
+                    updateBalance(address);
+                }, 3000);
                 VIEW.Editor.setEditorEnabled(true);
             });
         });
