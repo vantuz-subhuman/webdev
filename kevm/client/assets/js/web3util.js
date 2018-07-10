@@ -128,7 +128,7 @@ function Web3NetworkConstructor(network, name) {
                                 setTimeout(function () {
                                     if (!status.done) {
                                         console.warn('Failed to wait for promised full-contract. Falling back to tx-address');
-                                        contract._address = fullTx.contractAddress;
+                                        contract.options.address = contract._address = fullTx.contractAddress;
                                         buildCallback(null, contract);
                                     }
                                 }, self.fullContractAwait);
