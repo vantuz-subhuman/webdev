@@ -28319,7 +28319,8 @@ Method.prototype.buildCall = function() {
             } else {
                 defer.eventEmitter.emit('transactionHash', result);
 
-                method._confirmTransaction(defer, result, payload);
+                // PATCHED: transaction confirmations are turned off since we are using manual polling
+                // method._confirmTransaction(defer, result, payload);
             }
 
         };
@@ -33872,7 +33873,6 @@ HttpProvider.prototype.send = function (payload, callback) {
     var _this = this;
     var request = this._prepareRequest();
 
-
     request.onreadystatechange = function() {
         if (request.readyState === 4 && request.timeout !== 1) {
             var result = request.responseText;
@@ -33895,6 +33895,7 @@ HttpProvider.prototype.send = function (payload, callback) {
     };
 
     try {
+        // console.log('[TRACE] R: ', payload);
         request.send(JSON.stringify(payload));
     } catch(error) {
         this.connected = false;
