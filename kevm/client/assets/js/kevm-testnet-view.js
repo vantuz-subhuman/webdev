@@ -254,6 +254,22 @@ const VIEW = {
             this.el_gas_limit = $('#contract-deploy-gas-limit');
             this.el_gas_price = $('#contract-deploy-gas-price');
             this.el_submit_btn = $('#deploy-contract-btn');
+
+            let self = this;
+            this.el_submit_btn.click(function () {
+                let cb = VIEW.DeployContractModal.deployCallback;
+                if (cb) {
+                    let gasLimit = self.el_gas_limit.val();
+                    let gasPrice = self.el_gas_price.val();
+                    if (gasLimit === '' || gasLimit < 0 || gasPrice === '' || gasPrice < 0) {
+                        alert("Gas limit and gas price cannot be empty or negative!");
+                        return;
+                    }
+                    self.el_modal.modal('toggle');
+                    VIEW.DeployContractModal.deployCallback = null;
+                    cb({gasLimit: gasLimit, gasPrice: gasPrice});
+                }
+            });
         },
         showModal: function(fromAddress, name, gas, cb) {
             this.el_address_from.text(fromAddress);
@@ -261,17 +277,7 @@ const VIEW = {
             this.el_gas_cost.text(gas + ' WEI');
             this.el_gas_limit.val(gas * 2);
             this.el_gas_price.val(5000000000);
-            let self = this;
-            this.el_submit_btn.click(function () {
-                const gasLimit = self.el_gas_limit.val();
-                const gasPrice = self.el_gas_price.val();
-                if (gasLimit === '' || gasLimit < 0 || gasPrice === '' || gasPrice < 0) {
-                    alert("Gas limit and gas price cannot be empty or negative!");
-                    return;
-                }
-                self.el_modal.modal('toggle');
-                cb({gasLimit: gasLimit, gasPrice: gasPrice});
-            });
+            VIEW.DeployContractModal.deployCallback = cb;
             this.el_modal.modal('toggle');
         }
     }

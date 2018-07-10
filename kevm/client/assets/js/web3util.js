@@ -67,8 +67,6 @@ function Web3NetworkConstructor(network, name) {
 
     AbstractNetworkConstructor.call(this, network, name);
 
-    this.fullContractAwait = 5000;
-
     this.web3.eth.getBlockNumber()
         .then(console.log);
 
@@ -108,7 +106,8 @@ function Web3NetworkConstructor(network, name) {
     };
 
     this.prepareDeploy = function(address, contractResult, cb) {
-        let contract = new this.web3.eth.Contract(JSON.parse(contractResult.interface));
+        let contractInterface = JSON.parse(contractResult.interface);
+        let contract = new this.web3.eth.Contract(contractInterface);
         console.log('Contract > ', contract);
         let deploy = contract.deploy({data: '0x' + contractResult.bytecode});
         let self = this;
@@ -125,14 +124,8 @@ function Web3NetworkConstructor(network, name) {
                         if (fullTx) {
                             result.tx = fullTx;
                             if (!result.contract) {
-                                setTimeout(function () {
-                                    if (!status.done) {
-                                        console.warn('Failed to wait for promised full-contract. Falling back to tx-address');
-                                        contract.options.address = contract._address = fullTx.contractAddress;
-                                        buildCallback(null, contract);
-                                    }
-                                }, self.fullContractAwait);
-                                return;
+                                console.log('Creating contract from tx address!');
+                                result.contract = new self.web3.eth.Contract(contractInterface, fullTx.contractAddress);
                             }
                         } else if (fullContract) {
                             result.contract = fullContract;
