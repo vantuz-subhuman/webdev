@@ -55,7 +55,7 @@
     </nav>
 
 
-    <div id="main-container" class="container-fluid d-flex h-100 flex-column">
+    <div id="main-container" class="container-fluid d-flex flex-column">
 
             <div class="row">
 
@@ -188,21 +188,22 @@
                                         <ul class="list-group list-group-flush">
                                             <li class="list-group-item">Contract name: <span class="codeline" id="contract-deploy-name"></span></li>
                                             <li class="list-group-item">From address: <span class="codeline" id="contract-deploy-from"></span></li>
-                                            <li class="list-group-item">Estimated gas:
+                                            <li class="list-group-item">Estimated gas (wei):
                                                 <span class="codeline" id="contract-deploy-gas-estimate"></span>
-                                                <span class="modal-comment" id="contract-deploy-gas-estimate-cost">0.002345</span>
+                                                <span class="modal-comment" id="contract-deploy-gas-estimate-cost"></span>
                                             </li>
                                             <li class="list-group-item">
                                                 <label>
-                                                    Gas limit:
+                                                    Gas limit (wei):
                                                     <input type="number" min="0" id="contract-deploy-gas-limit">
-                                                    <span class="modal-comment" id="contract-deploy-gas-limit-cost">0.002345</span>
+                                                    <span class="modal-comment" id="contract-deploy-gas-limit-cost"></span>
                                                 </label>
                                             </li>
                                             <li class="list-group-item">
                                                 <label>
-                                                    Gas price:
+                                                    Gas price (wei):
                                                     <input type="number" min="0" id="contract-deploy-gas-price">
+                                                    <span class="modal-comment" id="contract-deploy-gas-price-eth"></span>
                                                 </label>
                                             </li>
                                         </ul>
@@ -285,6 +286,22 @@ contract Counter {
                     </div>
                     <div id="compiled-structure">
                     </div>
+                </div>
+
+            </div>
+
+            <div id="deployed-row" class="row border-top">
+
+                <div class="col-md-12">
+
+                    <div class="d-flex justify-content-between header-row">
+                        <label for="compiled-structure">
+                            Deployed contracts:
+                        </label>
+                    </div>
+                    <div id="deployed-contracts">
+                    </div>
+
                 </div>
 
             </div>

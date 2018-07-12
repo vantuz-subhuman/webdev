@@ -84,6 +84,11 @@ body {
     left: calc(50% - 64px);
 }
 
+#deployed-row {
+    margin-top: 1rem;
+    border-radius: 10px;
+}
+
 .codeline {
     font-family: monospace;
     border: 1px solid lightgrey;

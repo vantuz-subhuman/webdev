@@ -255,6 +255,7 @@ const VIEW = {
             this.el_gas_limit = $('#contract-deploy-gas-limit');
             this.el_gas_limit_cost= $('#contract-deploy-gas-limit-cost');
             this.el_gas_price = $('#contract-deploy-gas-price');
+            this.el_gas_price_eth = $('#contract-deploy-gas-price-eth');
             this.el_submit_btn = $('#deploy-contract-btn');
 
             let self = this;
@@ -275,18 +276,35 @@ const VIEW = {
 
             this.el_modal.on('hidden.bs.modal', function () {
                 VIEW.Editor.setEditorEnabled(true);
-            })
+            });
+
+            this.el_gas_limit.on('change paste keyup', function () {
+                let limit = $(this).val() || 0;
+                let price = self.el_gas_price.val() || 0;
+                self.el_gas_limit_cost.text(`(${Network.fromWei(limit * price)} ETH)`);
+            });
+
+            this.el_gas_price.on('change paste keyup', function () {
+                let price = $(this).val() || 0;
+                let limit = self.el_gas_limit.val() || 0;
+                let estimate = self.el_gas_estimate.val;
+                self.el_gas_limit_cost.text(`(${Network.fromWei(limit * price)} ETH)`);
+                self.el_gas_estimate_cost.text(`(${Network.fromWei(estimate * price)} ETH)`);
+                self.el_gas_price_eth.text(`(${Network.fromWei(price)} ETH)`);
+            });
         },
         showModal: function(fromAddress, name, gas, cb) {
             this.el_address_from.text(fromAddress);
             this.el_contract_name.text(name);
             let gasPrice = 5000000000;
             let gasLimit = gas * 2;
-            this.el_gas_estimate.text(gas + ' WEI');
+            this.el_gas_estimate.text(gas);
+            this.el_gas_estimate.val = gas;
             this.el_gas_estimate_cost.text(`(${Network.fromWei(gas * gasPrice)} ETH)`);
             this.el_gas_limit.val(gasLimit);
             this.el_gas_limit_cost.text(`(${Network.fromWei(gasLimit * gasPrice)} ETH)`);
             this.el_gas_price.val(gasPrice);
+            this.el_gas_price_eth.text(`(${Network.fromWei(gasPrice)} ETH)`);
             VIEW.DeployContractModal.deployCallback = cb;
             this.el_modal.modal('toggle');
         }
