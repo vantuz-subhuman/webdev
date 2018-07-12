@@ -61,6 +61,11 @@ function AbstractNetworkConstructor(network, name) {
             console.log('Removed account from wallet: ' + address);
         }
     };
+
+    this.fromWei = function(wei, parse = false) {
+        let res = this.web3.utils.fromWei('' + wei);
+        return parse ? parseFloat(res) : res;
+    }
 }
 
 function Web3NetworkConstructor(network, name) {
@@ -98,7 +103,7 @@ function Web3NetworkConstructor(network, name) {
     this.getBalance = function(address, cb) {
         // cb('' + Math.round(Math.random() * 100) / 100);
         this.web3.eth.getBalance(address)
-            .then(r => cb(this.web3.utils.fromWei(r)));
+            .then(r => cb(this.fromWei(r)));
     };
 
     this.faucetRequest = function(address, cb) {
@@ -170,17 +175,26 @@ function MockNetworkConstructor() {
     let block = 208796;
     let balances = {};
 
+    function createTx({txHash, gas, contractAddress}) {
+        txHash = txHash || Util.newRandomPrivateKey();
+        gas = gas || 21000;
+        return {
+            blockHash: '0x' + Util.newRandomPrivateKey(),
+            blockNumber: block++,
+            gasUsed: gas,
+            cumulativeGasUsed: gas,
+            returnData: '0x',
+            status: false,
+            transactionHash: txHash,
+            transactionIndex: 0,
+            contractAddress: contractAddress
+        }
+    }
+
     this.getTransactionReceiptMined = function getTransactionReceiptMined(txHash, interval) {
         return new Promise(function (resolve, reject) {
             setTimeout(function () {
-                resolve({
-                    blockHash: '0x' + Util.newRandomPrivateKey(),
-                    blockNumber: block++,
-                    returnData: '0x',
-                    status: false,
-                    transactionHash: txHash,
-                    transactionIndex: 0
-                });
+                resolve(createTx({txHash: txHash}));
             }, Util.randomInt(9000) + 1000);
         });
     };
@@ -197,11 +211,32 @@ function MockNetworkConstructor() {
     };
 
     this.prepareDeploy = function(address, contractResult, cb) {
+        let gasEstimate = contractResult.bytecode.length * 160;
+        let self = this;
         cb({
-            gasEstimate: contractResult.bytecode.length * 200,
-            send: function (params, cb) {
-                console.log(params);
-                // TODO
+            gasEstimate: gasEstimate,
+            send: function ({from, gas, gasPrice}, cb) {
+                setTimeout(function () {
+                    let cost = self.fromWei(gasEstimate * gasPrice, true);
+                    let balance = balances[from];
+                    if (!balance || balance < cost) {
+                        balances[from] = 0;
+                        cb({reason: 'Run out of balance!'});
+                        return;
+                    } else {
+                        balances[from] -= cost;
+                    }
+                    if (gas < gasEstimate) {
+                        cb({reason: `Run out of gas! {required: ${gasEstimate}, provided: ${gas}}`});
+                        return;
+                    }
+                    let contractAddress = '0x' + Util.newRandomHex(20);
+                    let contractInterface = JSON.parse(contractResult.interface);
+                    cb(null, {
+                        tx: createTx({gas: gasEstimate, contractAddress: contractAddress}),
+                        contract: new self.web3.eth.Contract(contractInterface, contractAddress)
+                    })
+                }, Util.randomInt(8000) + 1000)
             }
         });
     };

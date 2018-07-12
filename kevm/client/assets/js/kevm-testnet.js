@@ -1,5 +1,5 @@
-const Network = Object.freeze(new Web3NetworkConstructor('https://kevm-testnet.iohkdev.io:8546', 'Cardano Test-Net'));
-// const Network = Object.freeze(new MockNetworkConstructor());
+// const Network = Object.freeze(new Web3NetworkConstructor('https://kevm-testnet.iohkdev.io:8546', 'Cardano Test-Net'));
+const Network = Object.freeze(new MockNetworkConstructor());
 
 const FAUCET_MAX_PENDING_REQUESTS = 10;
 
@@ -308,5 +308,5 @@ $(function() {
         COMPILER.setSelectedVersion(idx, () => {
             VIEW.Editor.setEditorEnabled(true);
         });
-    })
+    });
 });

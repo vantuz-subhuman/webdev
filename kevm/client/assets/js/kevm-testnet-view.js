@@ -250,8 +250,10 @@ const VIEW = {
             this.el_modal = $('#deploy-contract-modal');
             this.el_address_from = $('#contract-deploy-from');
             this.el_contract_name = $('#contract-deploy-name');
-            this.el_gas_cost = $('#contract-deploy-gas-estimate');
+            this.el_gas_estimate = $('#contract-deploy-gas-estimate');
+            this.el_gas_estimate_cost = $('#contract-deploy-gas-estimate-cost');
             this.el_gas_limit = $('#contract-deploy-gas-limit');
+            this.el_gas_limit_cost= $('#contract-deploy-gas-limit-cost');
             this.el_gas_price = $('#contract-deploy-gas-price');
             this.el_submit_btn = $('#deploy-contract-btn');
 
@@ -270,13 +272,21 @@ const VIEW = {
                     cb({gasLimit: gasLimit, gasPrice: gasPrice});
                 }
             });
+
+            this.el_modal.on('hidden.bs.modal', function () {
+                VIEW.Editor.setEditorEnabled(true);
+            })
         },
         showModal: function(fromAddress, name, gas, cb) {
             this.el_address_from.text(fromAddress);
             this.el_contract_name.text(name);
-            this.el_gas_cost.text(gas + ' WEI');
-            this.el_gas_limit.val(gas * 2);
-            this.el_gas_price.val(5000000000);
+            let gasPrice = 5000000000;
+            let gasLimit = gas * 2;
+            this.el_gas_estimate.text(gas + ' WEI');
+            this.el_gas_estimate_cost.text(`(${Network.fromWei(gas * gasPrice)} ETH)`);
+            this.el_gas_limit.val(gasLimit);
+            this.el_gas_limit_cost.text(`(${Network.fromWei(gasLimit * gasPrice)} ETH)`);
+            this.el_gas_price.val(gasPrice);
             VIEW.DeployContractModal.deployCallback = cb;
             this.el_modal.modal('toggle');
         }
