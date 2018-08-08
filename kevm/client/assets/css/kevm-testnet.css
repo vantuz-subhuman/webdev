@@ -62,11 +62,11 @@ body {
     font-family: sans-serif;
 }
 
-#compiled-structure .card-header .btn {
+#compiled-structure .card-header .btn, #deployed-contracts .card-header .btn {
     padding: 0;
 }
 
-#compiled-structure .structure-header {
+#compiled-structure .structure-header, #deployed-contracts .structure-header {
     font-size: 0.9rem;
 }
 
@@ -101,6 +101,10 @@ body {
 .disabled-area {
     pointer-events: none;
     opacity: 0.4;
+}
+
+#footer-padding {
+    height: 100px;
 }
 
 #footer-row {
