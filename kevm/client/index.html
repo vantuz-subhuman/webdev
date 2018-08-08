@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>Cardano KEVM Client</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=yes">
+
+        <link rel="manifest" href="site.webmanifest">
+        <link rel="apple-touch-icon" href="icon.png">
+
+        <link rel="icon" href="favicon.ico?v=1.0">
+
+        <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="assets/css/kevm-testnet.css">
+
+    </head>
+
+    <body>
+
+
+    <nav id="navbar" class="navbar navbar-expand-lg navbar-light bg-light fixed-top justify-content-between">
+
+        <a class="navbar-brand" href=".">Cardano KEVM Client</a>
+
+        <div style="padding-top: 8px;">
+            <label for="account-selector">
+                Account:
+                <select class="form-control-sm" id="account-selector">
+                </select>
+            </label>
+            <span id="balance" class="badge badge-info">... ETH</span>
+            <button type="button" class="btn btn-info" id="balance-reload">
+                &#x21bb
+            </button>
+            <button id="account-add-init-btn" type="button" class="btn btn-info"
+                    data-toggle="modal" data-target="#account-add-modal"
+                    onclick="addAccountRandomizeKey()">
+                +
+            </button>
+            <button id="account-remove-init-btn" type="button" class="btn btn-info"
+                    data-toggle="modal" data-target="#account-remove-modal"
+                    onclick="accountRemoveSetAddress()">
+                -
+            </button>
+            <button id="account-coins-init-btn" type="button" class="btn btn-info"
+                    data-toggle="modal" data-target="#account-coins-modal"
+                    onclick="accountCoinsSetAddress()">
+                $
+            </button>
+        </div>
+    </nav>
+
+
+    <div id="main-container" class="container-fluid d-flex flex-column">
+
+            <div class="row">
+
+                <div class="modal fade" id="account-add-modal" tabindex="-1" role="dialog" aria-labelledby="accountAddModel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="accountAddModel">Add account</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body row">
+                                <div class="col-12">
+                                    <div class="form-group" id="account-add-pk-group">
+                                        <label for="account-add-pk">Private key (random):</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text" id="inputGroupPrepend3">0x</span>
+                                            </div>
+                                            <input id="account-add-pk" class="form-control form-control-sm" type="text">
+                                            <button type="button" class="btn btn-primary" onclick="addAccountRandomizeKey()">
+                                                &#x21bb
+                                            </button>
+                                            <div class="invalid-feedback" id="account-add-pk-err"></div>
+                                        </div>
+                                        <div class="modal-comment">
+                                            This private key is generated randomly.
+                                            New account will be created from this private key.
+                                            You can edit it or click the button on the right to generate a new one.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" id="account-add-btn">Add account</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="account-remove-modal" tabindex="-1" role="dialog" aria-labelledby="accountRemoveModel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="accountRemoveModel">Remove account</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body row">
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label for="account-remove-address">Remove this account? (Cannot be undone!)</label>
+                                        <div class="input-group">
+                                            <input id="account-remove-address" readonly="readonly" class="form-control form-control-sm" type="text">
+                                        </div>
+                                        <div class="modal-comment">
+                                            <b>Note:</b> you cannot undo the account removal!
+                                            Though, you can always restore it from a private key, if you have one.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" id="account-remove-btn">Remove account</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="account-coins-modal" tabindex="-1" role="dialog" aria-labelledby="accountCoinsModel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="accountCoinsModel">Get free test tokens</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body row">
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label for="account-coins-address">Request free tokens for this address?</label></label>
+                                        <div class="input-group">
+                                            <input id="account-coins-address" readonly="readonly" class="form-control form-control-sm" type="text">
+                                        </div>
+                                        <div class="modal-comment">
+                                            <b>Note:</b> free tokens are requested from the test-net faucet.
+                                            Faucet has request throttling limits, so requests only will be done <b>ones in 30 seconds</b>.
+                                            All requests are placed in a <b>single queue</b> that you can see below.
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <button type="button" class="btn btn-primary" id="account-coins-btn">
+                                            Request 0.01 ETH test tokens for the selected address
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 style="margin-left: 10px;">Tokens request queue:</h4>
+                                <div class="card-body border-top" id="account-coins-queue-card">
+                                    <ul class="list-group" id="account-coins-queue-list">
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" id="account-coins-cancel-btn">Cancel all requests</button>
+                                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="deploy-contract-modal" tabindex="-1" role="dialog" aria-labelledby="deployContractModal" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="deployContractModal">Deploy this contract?</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body row">
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <ul class="list-group list-group-flush">
+                                            <li class="list-group-item">Contract name: <span class="codeline" id="contract-deploy-name"></span></li>
+                                            <li class="list-group-item">From address: <span class="codeline" id="contract-deploy-from"></span></li>
+                                            <li class="list-group-item">Estimated gas (wei):
+                                                <span class="codeline" id="contract-deploy-gas-estimate"></span>
+                                                <span class="modal-comment" id="contract-deploy-gas-estimate-cost"></span>
+                                            </li>
+                                            <li class="list-group-item">
+                                                <label>
+                                                    Gas limit (wei):
+                                                    <input type="number" min="0" id="contract-deploy-gas-limit">
+                                                    <span class="modal-comment" id="contract-deploy-gas-limit-cost"></span>
+                                                </label>
+                                            </li>
+                                            <li class="list-group-item">
+                                                <label>
+                                                    Gas price (wei):
+                                                    <input type="number" min="0" id="contract-deploy-gas-price">
+                                                    <span class="modal-comment" id="contract-deploy-gas-price-eth"></span>
+                                                </label>
+                                            </li>
+                                        </ul>
+                                        <div class="modal-comment">
+                                            <b>Note:</b> you cannot undo the account removal!
+                                            Though, you can always restore it from a private key, if you have one.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" id="deploy-contract-btn">Deploy contract</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="editor-row" class="row disabled-area">
+
+                <img id="editor-row-overlay" src="assets/Dual_Ring-3s-64px.gif"/>
+
+                <div class="col-md-7 border-right">
+
+                    <div class="d-flex justify-content-between header-row">
+                        <label for="account-selector">
+                            Compiler version:
+                            <select class="form-control-sm" id="solc-selector"></select>
+                        </label>
+                        <label for="editor-autocompile" class="form-check-label">
+                            <input id="editor-autocompile" class="form-check-input" type="checkbox"/>
+                            Auto-compile
+                        </label>
+                    </div>
+
+                    <div id="editor">// Test Solidity Contract
+pragma solidity ^0.4.0;
+contract Counter {
+
+    int private count = 0;
+
+    function incrementCounter() public {
+        count += 1;
+    }
+
+    function decrementCounter() public {
+        count -= 1;
+    }
+
+    function getCount() public constant returns (int) {
+        return count;
+    }
+
+    function setCounter(int c) public {
+        count = c;
+    }
+}</div>
+
+                    <div class="d-flex justify-content-between">
+                        <a target="_blank" href="https://github.com/ajaxorg/ace/wiki/Default-Keyboard-Shortcuts">Keyboard shortcuts help</a>
+                        <div>
+                            <!--suppress CheckImageSize -->
+                            <img id="compile-spinner" src="assets/Dual_Ring-3s-64px.gif" width="32px" hidden="hidden"/>
+                            <button id="compile-btn" class="btn btn-info"><b>Compile</b> (Ctrl+S)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-5">
+                    <div class="d-flex justify-content-between header-row">
+                        <label for="compiled-structure">
+                            Structure:
+                        </label>
+                        <label for="compiled-structure-autoexpand" class="form-check-label">
+                            <input id="compiled-structure-autoexpand" class="form-check-input" type="checkbox"/>
+                            Always expand
+                        </label>
+                    </div>
+                    <div id="compiled-structure">
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="deployed-row" class="row border-top">
+
+                <div class="col-md-12">
+
+                    <div class="d-flex justify-content-between header-row">
+                        <label for="compiled-structure">
+                            Deployed contracts:
+                        </label>
+                    </div>
+
+                    <div id="deployed-contracts">
+                        <div class="card">
+                            <div class="card-header" id="headingId">
+                                <div class="d-inline">
+                                    <div>
+                                        <button class="btn btn-link structure-header" data-toggle="collapse" data-target="#collapseId" aria-expanded="true" aria-controls="collapseId">
+                                            :Counter
+                                        </button>
+                                        <span class="structure-header">@ <a target="_blank" href="https://kevm-testnet.iohkdev.io/account/0xa3581751b8a835e7038c6af5cfc40220811ce42a">0xa3581751b8a835e7038c6af5cfc40220811ce42a</a></span>
+                                    </div>
+                                    <div class="modal-comment" style="padding: 0; margin: 0;">
+                                        <b>Struct:</b> d2404e13ebfa8b0e,
+                                        <a target="_blank" href="https://kevm-testnet.iohkdev.io/transaction/0xe9a7995e037d03c1a28094b5a287eace9c47e12d36c385084c3d64d39364f547">tx</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="collapseId" class="collapse show list-group" aria-labelledby="headingId" data-parent="#accordion">
+                                <span class="list-group-item structure-item">${method.name} (GAS: ${method.gas})</span>
+                                <span class="list-group-item structure-item">${method.name} (GAS: ${method.gas})</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div id="footer-padding"></div>
+
+            <!--<div class="row" id="footer-row">-->
+
+                <!--<div class="col-md-12">-->
+
+                    <!--<div id="footer" class="text-center">-->
+                        <!--Version: 0.1 (<a href="#roadmap" class="activate-tab">roadmap</a>)-->
+                        <!--| GitHub <a target="_blank" href="https://github.com/antipalos/antipalos.github.io/issues?q=is%3Aopen+is%3Aissue+project%3Aantipalos%2Fantipalos.github.io%2F1">@Antipalos</a>-->
+                        <!--| Dev: <a target="_blank" href="https://twitter.com/vsubhuman">@vsubhuman</a>-->
+                        <!--| Forum: <a target="_blank" href="https://forum.cardano.org/t/cardano-staking-profits-calculator/12314">forum.cardano.org</a>-->
+                        <!--| Chat: <a target="_blank" href="https://t.me/CardanoGeneral">t.me/CardanoGeneral</a>-->
+                        <!--| Reddit: <a target="_blank" href="https://www.reddit.com/r/cardano/comments/8m0ji3/cardano_staking_profits_calculator/">r/Cardano</a>-->
+                        <!--| Donate: <a target="_blank" href="https://cardanowiki.info/wiki/Funding">CardanoWiki</a>-->
+                    <!--</div>-->
+
+                <!--</div>-->
+            <!--</div>-->
+
+        </div>
+
+        <script src="assets/js/jquery.min.js"></script>
+        <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="node_modules/js-cookie/src/js.cookie.js"></script>
+        <script src="assets/js/ace-builds-1.3.3/src-min-noconflict/ace.js"></script>
+        <script src="assets/js/crypto-bundle.js"></script>
+        <script src="assets/js/web3-patched.js"></script>
+        <script src="assets/js/browser-solc.min.js"></script>
+        <script src="assets/js/web3util.js"></script>
+        <script src="assets/js/kevm-testnet-state.js"></script>
+        <script src="assets/js/kevm-testnet-view.js"></script>
+        <script src="assets/js/kevm-testnet-compiler.js"></script>
+        <script src="assets/js/kevm-testnet.js"></script>
+
+    </body>
+
+</html>

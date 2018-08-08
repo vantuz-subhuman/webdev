@@ -1,0 +1,113 @@
+html,body {
+    height: 100%;
+}
+
+body {
+    min-height: 101vh;
+    padding-top: 5rem;
+}
+
+#navbar {
+    border-bottom: 1px solid lightgrey;
+}
+
+#balance {
+    font-size: 1rem;
+    height: 2.4rem;
+    padding-top: 0.59rem;
+}
+
+.modal-dialog {
+    min-width: 68ch;
+}
+
+#account-add-pk {
+    font-family: monospace;
+    font-size: 1em;
+}
+
+.modal-comment {
+    margin-top: 1em;
+    font-size: 0.8em;
+    color: grey;
+}
+
+#account-coins-queue-card {
+    height: 15rem;
+    overflow: scroll;
+    overflow-scrolling: auto;
+}
+
+.account-coins-queue-list-item.active {
+    background: aliceblue;
+    color: black;
+}
+
+.header-row {
+    height: 2.5rem;
+}
+
+#editor {
+    height: 500px;
+    border: 2px solid lightblue;
+    border-radius: 5px;
+}
+
+#compiled-structure {
+    height: 500px;
+    overflow: scroll;
+    overflow-scrolling: auto;
+    border: 2px solid lightblue;
+    border-radius: 5px;
+    font-family: sans-serif;
+}
+
+#compiled-structure .card-header .btn, #deployed-contracts .card-header .btn {
+    padding: 0;
+}
+
+#compiled-structure .structure-header, #deployed-contracts .structure-header {
+    font-size: 0.9rem;
+}
+
+#compiled-structure .structure-item {
+    font-size: 0.75rem;
+}
+
+#editor-row-overlay {
+    display: block;
+    position: absolute;
+    z-index: 1000;
+    width: 128px;
+    height: 128px;
+    top: calc(40% - 64px);
+    left: calc(50% - 64px);
+}
+
+#deployed-row {
+    margin-top: 1rem;
+    border-radius: 10px;
+}
+
+.codeline {
+    font-family: monospace;
+    border: 1px solid lightgrey;
+    background: #fafafa;
+    font-size: 1.2rem;
+    padding: 3px;
+    border-radius: 4px;
+}
+
+.disabled-area {
+    pointer-events: none;
+    opacity: 0.4;
+}
+
+#footer-padding {
+    height: 100px;
+}
+
+#footer-row {
+    background-color: #fafafa;
+    border-top: 1px solid lightgrey;
+}
